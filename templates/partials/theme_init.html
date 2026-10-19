@@ -5,6 +5,9 @@
 <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
 <meta name="theme-color" content="#0b0606">
 <link rel="manifest" href="/manifest.webmanifest">
+{% set vm = vm_shell() %}{% if vm %}<script type="application/json" id="vaultMe" nonce="{{ csp_nonce }}">{{ vm|tojson }}</script>{% endif %}
+<link rel="stylesheet" href="/static/css/vault-mobile-app.css">
+<script src="/static/js/vault-mobile.js" defer></script>
 <script src="/static/js/vault-pwa.js"></script>
 <!-- Anti-FOUC : Applique le thème AVANT le premier rendu -->
 <script nonce="{{ csp_nonce }}">

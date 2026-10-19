@@ -84,6 +84,16 @@ PHRASES = {
     'Système': 'System',
 
     # ── Navigation et barre latérale ─────────────────────────────────────────
+    'Partagés': 'Shared',
+    'Plus': 'More',
+    'Paramètres': 'Settings',
+    'Abonnement': 'Plan',
+    'Thème': 'Theme',
+    'Clair': 'Light',
+    'Sombre': 'Dark',
+    'Langue': 'Language',
+    'Corbeille': 'Trash',
+    'Téléverser': 'Upload',
     'Partagés avec moi': 'Shared with me',
     '👥 Partagés avec moi': '👥 Shared with me',
     'Contacts de confiance': 'Trusted contacts',
@@ -603,6 +613,7 @@ PATTERNS = [
     (r"Fichier partagé avec (.+)\. Il le trouvera dans « Partagés avec moi »\.", "File shared with $1. They will find it under “Shared with me”."),
     (r"(\d+) fichier\(s\) sélectionné\(s\)", "$1 file(s) selected"),
     (r"(.+) disponibles sur (.+)", "$1 available out of $2"),
+    (r"utilisés sur (.+)", "used of $1"),
     # Partages
     (r"(.+?) · partagé par (.+) · le (.+)", "$1 · shared by $2 · on $3"),
     (r"Dossier partagé par (.+)", "Folder shared by $1"),

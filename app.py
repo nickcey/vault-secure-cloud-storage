@@ -331,9 +331,27 @@ def load_language():
         g.lang = session.get('language', 'fr')
 
 
+MOBILE_APP_PATHS = {'/dashboard', '/upload', '/upload-page', '/shared-with-me', '/share/list', '/share-list-page',
+                    '/transfers', '/trash', '/trash-page', '/activity', '/activity-page', '/sessions',
+                    '/sessions-page', '/settings', '/settings-page', '/plans', '/trusted-contacts'}
+
+
+def vm_shell():
+    """Infos pour la barre d'onglets mobile (pages de l'application, utilisateur connecté)."""
+    if 'user_id' not in session or not (request.path in MOBILE_APP_PATHS or request.path.startswith('/subscribe/')):
+        return None
+    user = current_user()
+    if not user or user.is_admin or user.is_temp_password:
+        return None
+    st = _storage_stats(user)
+    return {'name': user.username, 'email': user.email, 'plan': user.plan or 'free',
+            'used': st['used_space'], 'total': st['total_space'], 'percent': st['used_percent'],
+            'lang': g.get('lang', 'fr'), 'admin': bool(session.get('admin_authenticated'))}
+
+
 @app.context_processor
 def inject_language():
-    return dict(t=lambda key: t(key, g.lang), lang=g.lang,
+    return dict(t=lambda key: t(key, g.lang), lang=g.lang, vm_shell=vm_shell,
                 csp_nonce=g.get('csp_nonce', ''))
 
 

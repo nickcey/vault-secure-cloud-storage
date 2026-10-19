@@ -30,9 +30,32 @@ const VaultKeyStore = (function () {
           db.createObjectStore(STORE);
         }
       };
-      req.onsuccess = () => { _db = req.result; resolve(_db); };
+      req.onsuccess = () => {
+        const db = req.result;
+        // Safari ferme la connexion quand le site efface son stockage (déconnexion) :
+        // on l'oublie pour en rouvrir une neuve au prochain accès.
+        const forget = () => { if (_db === db) _db = null; try { db.close(); } catch (e) { /* déjà fermée */ } };
+        db.onclose = forget;
+        db.onversionchange = forget;
+        _db = db;
+        resolve(db);
+      };
       req.onerror = () => reject(req.error);
     });
+  }
+
+  /** Transaction sur une connexion valide : si elle est en train de se fermer, on en rouvre une. */
+  async function txn(mode) {
+    for (let attempt = 0; ; attempt++) {
+      const db = await openDB();
+      try {
+        return db.transaction(STORE, mode);
+      } catch (e) {
+        if (_db === db) _db = null;
+        try { db.close(); } catch (_) { /* déjà fermée */ }
+        if (attempt >= 1) throw e;
+      }
+    }
   }
 
   /**
@@ -41,9 +64,8 @@ const VaultKeyStore = (function () {
    * @param {CryptoKey} privateKey
    */
   async function save(privateKey) {
-    const db = await openDB();
+    const tx = await txn('readwrite');
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put(
         { key: privateKey, saved_at: Date.now() }, ENTRY_ID);
       tx.oncomplete = () => resolve(true);
@@ -53,9 +75,8 @@ const VaultKeyStore = (function () {
 
   /** Lit la clé privée CryptoKey. Inexistante ou TTL dépassé → null. */
   async function load() {
-    const db = await openDB();
+    const tx = await txn('readonly');
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly');
       const req = tx.objectStore(STORE).get(ENTRY_ID);
       req.onsuccess = () => {
         const rec = req.result;
@@ -65,8 +86,10 @@ const VaultKeyStore = (function () {
           return resolve(null);
         }
         // RAFRAÎCHIT : la présence d'activité utilisateur met à jour le TTL
-        const wtx = db.transaction(STORE, 'readwrite');
-        wtx.objectStore(STORE).put({ ...rec, saved_at: Date.now() }, ENTRY_ID);
+        try {
+          const wtx = tx.db.transaction(STORE, 'readwrite');
+          wtx.objectStore(STORE).put({ ...rec, saved_at: Date.now() }, ENTRY_ID);
+        } catch (e) { /* rafraîchissement facultatif */ }
         resolve(rec.key);
       };
       req.onerror = () => reject(req.error);
@@ -82,9 +105,8 @@ const VaultKeyStore = (function () {
   const PENDING_TTL_MS = 5 * 60 * 1000;
 
   async function savePending(aesKey) {
-    const db = await openDB();
+    const tx = await txn('readwrite');
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put({ key: aesKey, saved_at: Date.now() }, PENDING_ID);
       tx.oncomplete = () => resolve(true);
       tx.onerror = () => reject(tx.error);
@@ -92,9 +114,8 @@ const VaultKeyStore = (function () {
   }
 
   async function takePending() {
-    const db = await openDB();
+    const tx = await txn('readwrite');
     return new Promise((resolve) => {
-      const tx = db.transaction(STORE, 'readwrite');
       const st = tx.objectStore(STORE);
       const req = st.get(PENDING_ID);
       req.onsuccess = () => {
@@ -108,9 +129,8 @@ const VaultKeyStore = (function () {
 
   /** Efface la clé privée de IndexedDB (déconnexion, inactivité...). */
   async function clear() {
-    const db = await openDB();
+    const tx = await txn('readwrite');
     return new Promise((resolve) => {
-      const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).delete(PENDING_ID);
       const req = tx.objectStore(STORE).delete(ENTRY_ID);
       tx.oncomplete = () => resolve(true);
@@ -120,9 +140,8 @@ const VaultKeyStore = (function () {
 
   /** Met à jour l'horodatage d'activité sans relire la clé. */
   async function touch() {
-    const db = await openDB();
+    const tx = await txn('readwrite');
     return new Promise((resolve) => {
-      const tx = db.transaction(STORE, 'readwrite');
       const st = tx.objectStore(STORE);
       const req = st.get(ENTRY_ID);
       req.onsuccess = () => {
