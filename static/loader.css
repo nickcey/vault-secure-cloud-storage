@@ -1,0 +1,74 @@
+/* Loader Component for Vault - Secure Cloud Storage */
+
+.btn-loader {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.btn-loader .btn-text {
+  visibility: hidden;
+}
+
+.btn-loader::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-top: -10px;
+  margin-left: -10px;
+  border: 2px solid transparent;
+  border-top-color: #160305;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Overlay loader for full page */
+.page-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(7, 4, 4, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 59, 68, 0.2);
+  border-top-color: #ff3b44;
+  border-radius: 50%;
+  animation: page-spin 1s linear infinite;
+  box-shadow: 0 0 20px rgba(255, 59, 68, 0.4);
+}
+
+@keyframes page-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.page-loader-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: #f3e6e4;
+  text-transform: uppercase;
+}

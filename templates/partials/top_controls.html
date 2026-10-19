@@ -1,0 +1,33 @@
+<!-- Top Controls: Theme Toggle + Language Selector -->
+<div class="top-controls-container">
+  <!-- Theme Toggle Switch -->
+  <div class="theme-toggle-wrapper">
+    <div class="theme-toggle" title="{% if lang == 'fr' %}Changer le thème{% else %}Change theme{% endif %}">
+      <div class="theme-toggle-slider">
+        <span id="themeIcon">🌙</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language Dropdown -->
+  <div class="lang-dropdown">
+    <button class="lang-btn" title="{% if lang == 'fr' %}Changer la langue{% else %}Change language{% endif %}">
+      <span>🌐</span>
+      <span id="currentLang">{{ lang|upper if lang else 'FR' }}</span>
+    </button>
+    <div class="lang-menu" id="langMenu">
+      <a href="/set_language/fr" class="lang-item {% if lang == 'fr' or not lang %}active{% endif %}">
+        <span>🇫🇷</span>
+        <span>Français</span>
+      </a>
+      <a href="/set_language/en" class="lang-item {% if lang == 'en' %}active{% endif %}">
+        <span>🇬🇧</span>
+        <span>English</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Load CSS and JS -->
+<link rel="stylesheet" href="/static/css/top_controls.css">
+<script src="/static/js/top_controls.js"></script>

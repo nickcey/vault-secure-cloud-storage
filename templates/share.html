@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:40px 36px 34px;backdrop-filter:blur(22px);width:460px;text-align:center;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);animation:cardRise 0.6s cubic-bezier(.2,.9,.25,1) both;}
+  @keyframes cardRise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;}
+  .brand-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;}
+  .file-icon{width:64px;height:64px;border-radius:16px;background:rgba(200,30,44,0.14);border:1px solid rgba(255,90,90,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--ember-glow);}
+  .file-name{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px;word-break:break-all;}
+  .file-meta{font-size:13px;color:var(--ash);margin-bottom:4px;}
+  .expiry{font-size:12px;color:var(--ash);margin-bottom:24px;padding:8px 14px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);}
+  .expiry span{color:var(--ember-glow);}
+  .download-btn{display:block;width:100%;padding:14px;border:none;border-radius:11px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#160305;background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);cursor:pointer;text-decoration:none;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 12px 26px -8px rgba(200,30,44,0.55);}
+  .download-btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px -8px rgba(255,59,68,0.65);}
+  .download-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .powered{margin-top:22px;font-size:11px;color:var(--ash);}
+  .powered a{color:var(--ember-glow);text-decoration:none;}
+  .error-card{text-align:center;}
+  .error-icon{font-size:48px;margin-bottom:16px;}
+  .error-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--ember-glow);margin-bottom:8px;}
+  .error-msg{font-size:13px;color:var(--ash);line-height:1.6;}
+  .counter{font-size:12px;color:var(--ash);margin-bottom:16px;}
+  .counter strong{color:var(--bone);}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-mark">V</div>
+    <span class="brand-name">Vault</span>
+  </div>
+
+  <div class="error-card" id="shareErrorCard" style="display:none;">
+    <div class="error-icon">🔒</div>
+    <div class="error-title">Lien indisponible</div>
+    <div class="error-msg" id="shareError"></div>
+  </div>
+
+  <div id="shareReady" style="display:none;">
+  <div class="file-icon">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 3 H14 L18 7 V21 H7 Z"></path><path d="M14 3 V7 H18"></path>
+    </svg>
+  </div>
+  <div class="file-name" id="shareFileName"></div>
+  <div class="file-meta" id="shareInfo"></div>
+  <div class="counter" id="shareCounter" style="display:none;">Téléchargements : <strong id="shareCount"></strong></div>
+  <div class="expiry">Expire le <span id="shareExpiry"></span></div>
+
+  <button type="button" class="download-btn" id="dlBtn" disabled>⬇ Télécharger le fichier</button>
+  <div class="powered">Fichier chiffré par <a href="/">Vault Secure Cloud</a></div>
+  </div>
+</div>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-share.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

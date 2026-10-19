@@ -1,0 +1,190 @@
+/* ═══════════════════════════════════════════════════════════
+   TOP CONTROLS - Theme Toggle + Language Dropdown
+   Pour toutes les pages (login, signup, dashboard, etc.)
+   ═══════════════════════════════════════════════════════════ */
+
+.top-controls-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ═══ THEME TOGGLE SWITCH ═══ */
+.theme-toggle-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.theme-toggle {
+  position: relative;
+  width: 54px;
+  height: 28px;
+  background: rgba(243, 230, 228, 0.1);
+  border: 1px solid rgba(200, 30, 44, 0.2);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(243, 230, 228, 0.15);
+  border-color: rgba(200, 30, 44, 0.3);
+}
+
+.theme-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #c81e2c, #5a0a10);
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.light .theme-toggle-slider {
+  transform: translateX(26px);
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+}
+
+/* ═══ LANGUAGE DROPDOWN ═══ */
+.lang-dropdown {
+  position: relative;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(243, 230, 228, 0.05);
+  border: 1px solid rgba(200, 30, 44, 0.2);
+  border-radius: 8px;
+  color: #f3e6e4;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.lang-btn:hover {
+  background: rgba(243, 230, 228, 0.08);
+  border-color: rgba(200, 30, 44, 0.3);
+}
+
+.lang-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(12, 4, 5, 0.95);
+  border: 1px solid rgba(255, 90, 90, 0.16);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 140px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  animation: dropIn 0.15s ease both;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lang-menu.open {
+  display: block;
+}
+
+.lang-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #f3e6e4;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.lang-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lang-item.active {
+  background: rgba(200, 30, 44, 0.15);
+  color: #ff3b44;
+}
+
+/* Light mode adjustments */
+body.light .lang-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(200, 30, 44, 0.3);
+  color: #1a1a1a;
+}
+
+body.light .lang-menu {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(200, 30, 44, 0.2);
+}
+
+body.light .lang-item {
+  color: #1a1a1a;
+}
+
+body.light .lang-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+body.light .theme-toggle {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(200, 30, 44, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .top-controls-container {
+    top: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    width: 48px;
+    height: 26px;
+  }
+
+  .theme-toggle-slider {
+    width: 20px;
+    height: 20px;
+  }
+
+  body.light .theme-toggle-slider {
+    transform: translateX(22px);
+  }
+
+  .lang-btn {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+}

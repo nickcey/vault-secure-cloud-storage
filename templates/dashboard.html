@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<link rel="stylesheet" href="/static/loader.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --void:        #070404;
+    --void-deep:   #030101;
+    --ember:       #7a0f16;
+    --ember-hot:   #c81e2c;
+    --ember-glow:  #ff3b44;
+    --bone:        #f3e6e4;
+    --ash:         #9a7f7e;
+    --glass:       rgba(35, 12, 14, 0.35);
+    --glass-edge:  rgba(255, 90, 90, 0.16);
+    --radius:      18px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; overflow:hidden; }
+
+  body{
+    font-family:'Inter', sans-serif;
+    color: var(--bone);
+    position:relative;
+    display:flex;
+  }
+
+  /* ═══ BACKDROP CYBERPUNK ═══ */
+  .backdrop{
+    position:fixed; inset:0; z-index:0; overflow:hidden;
+  }
+  .floor{
+    position:absolute; left:0; right:0; bottom:-10%;
+    height:55%;
+    background-image:
+      linear-gradient(rgba(200,40,50,0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,40,50,0.12) 1px, transparent 1px);
+    background-size: 46px 46px;
+    transform: perspective(500px) rotateX(72deg);
+    -webkit-mask-image: linear-gradient(180deg, transparent, black 30%, black);
+            mask-image: linear-gradient(180deg, transparent, black 30%, black);
+    opacity:0.45;
+    animation: floorScroll 6s linear infinite;
+  }
+  @keyframes floorScroll{
+    from{ background-position: 0 0, 0 0; }
+    to{ background-position: 0 46px, 46px 0; }
+  }
+  .ember-particle{
+    position:absolute; bottom:-5%;
+    width:3px; height:3px; border-radius:50%;
+    background: var(--ember-glow);
+    box-shadow:0 0 8px 2px var(--ember-glow);
+    opacity:0.7;
+    animation: rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.8; }
+    100%{ transform:translateY(-115vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+
+  /* ═══ SIDEBAR ═══ */
+  .sidebar{
+    width:260px;
+    position:relative;
+    z-index:10;
+    display:flex;
+    flex-direction:column;
+    background: rgba(7,4,4,0.95);
+    border-right:1px solid rgba(200,30,44,0.1);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    flex-shrink:0;
+  }
+
+  .sidebar::before{
+    content:'';
+    position:absolute;
+    top:0;
+    left:20px;
+    right:20px;
+    height:1px;
+    background: linear-gradient(90deg, transparent, rgba(200,30,44,0.4), transparent);
+  }
+
+  .sidebar-header{
+    padding:24px 20px;
+    border-bottom:1px solid var(--glass-edge);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .brand-mark{
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    background: linear-gradient(135deg, var(--ember-hot), #3a0409);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 0 20px rgba(200,30,44,0.5);
+    font-family:'Orbitron', sans-serif;
+    font-weight:900;
+    font-size:18px;
+    color:#fff;
+    flex-shrink:0;
+  }
+
+  .brand-name{
+    font-family:'Orbitron', sans-serif;
+    font-size:18px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--bone);
+  }
+
+  .sidebar-nav{
+    flex:1;
+    padding:12px 8px;
+    overflow-y:auto;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar{
+    width:6px;
+  }
+
+  ::-webkit-scrollbar-track{
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb{
+    background: rgba(200,30,44,0.2);
+    border-radius:3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover{
+    background: rgba(200,30,44,0.4);
+  }
+
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 20px;
+    margin:2px 12px;
+    border-radius:10px;
+    color: rgba(243,230,228,0.6);
+    text-decoration:none;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition: all 0.25s ease;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .nav-item::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:3px;
+    background: #c81e2c;
+    border-radius:0 2px 2px 0;
+    transform: scaleY(0);
+    transition: transform 0.25s ease;
+    box-shadow: 0 0 8px rgba(200,30,44,0.4);
+  }
+
+  .nav-item:hover{
+    background: rgba(200,30,44,0.06);
+    color: #f3e6e4;
+  }
+
+  .nav-item.active{
+    background: rgba(200,30,44,0.1);
+    color: #f3e6e4;
+    font-weight:500;
+    animation: pulse-red 3s infinite;
+  }
+
+  .nav-item.active::before{
+    transform: scaleY(1);
+  }
+
+  @keyframes pulse-red{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(200,30,44,0.2); }
+    50%{ box-shadow: 0 0 0 4px rgba(200,30,44,0); }
+  }
+
+  .nav-icon{
+    font-size:18px;
+    width:20px;
+    text-align:center;
+    color: rgba(243,230,228,0.5);
+    transition: all 0.25s ease;
+  }
+
+  .nav-item:hover .nav-icon,
+  .nav-item.active .nav-icon{
+    color: #ff3b44;
+    filter: drop-shadow(0 0 4px rgba(255,59,68,0.4));
+  }
+
+  .nav-divider{
+    height:1px;
+    background: rgba(255,255,255,0.07);
+    margin:12px 8px;
+  }
+
+  /* ═══ STORAGE BAR (style MEGA amélioré) ═══ */
+  .sidebar-storage{
+    padding:20px;
+    border-top:1px solid rgba(200,30,44,0.1);
+    margin-top:auto;
+  }
+
+  .storage-label{
+    font-size:12px;
+    color: rgba(243,230,228,0.5);
+    margin-bottom:10px;
+    font-family:'Inter',sans-serif;
+  }
+
+  .storage-label span{
+    color: #f3e6e4;
+    font-weight:600;
+  }
+
+  .storage-text{
+    font-size:13px;
+    color: #f3e6e4;
+    margin-bottom:10px;
+  }
+
+  .storage-text strong{
+    color: #ff3b44;
+    font-weight:600;
+  }
+
+  .storage-bar{
+    width:100%;
+    height:6px;
+    background: rgba(243,230,228,0.06);
+    border-radius:3px;
+    overflow:hidden;
+    position:relative;
+    margin-bottom:12px;
+  }
+
+  .storage-bar-fill{
+    height:100%;
+    background: linear-gradient(90deg, #c81e2c, #ff3b44);
+    border-radius:3px;
+    position:relative;
+    box-shadow: 0 0 10px rgba(200,30,44,0.3);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .storage-bar-fill::after{
+    content:'';
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: scan 2s infinite;
+  }
+
+  @keyframes scan{
+    0%{ transform: translateX(-100%); }
+    100%{ transform: translateX(100%); }
+  }
+
+  .btn-upgrade{
+    display:block;
+    text-align:center;
+    width:100%;
+    margin-top:14px;
+    padding:10px;
+    background: rgba(200,30,44,0.1);
+    border:1px solid rgba(200,30,44,0.3);
+    border-radius:8px;
+    color: #ff3b44;
+    font-family:'Orbitron',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    text-decoration:none;
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-upgrade:hover{
+    background: rgba(200,30,44,0.2);
+    border-color: #ff3b44;
+    box-shadow: 0 0 16px rgba(200,30,44,0.2);
+    transform: translateY(-1px);
+  }
+
+  /* ═══ MAIN CONTENT ═══ */
+  .main-content{
+    flex:1;
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ═══ TOPBAR ═══ */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 28px;
+    background: rgba(7,4,4,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom:1px solid rgba(200,30,44,0.15);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+
+  .search-wrapper{
+    position:relative;
+    width:420px;
+  }
+
+  .search-box{
+    width:100%;
+    padding:12px 16px 12px 44px;
+    background: rgba(243,230,228,0.04);
+    border:1px solid rgba(200,30,44,0.25);
+    border-radius:10px;
+    color: #f3e6e4;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    letter-spacing:0.02em;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .search-box::placeholder{
+    color: rgba(243,230,228,0.35);
+  }
+
+  .search-box:focus{
+    outline:none;
+    border-color: #c81e2c;
+    box-shadow: 0 0 0 3px rgba(200,30,44,0.12),
+                0 0 20px rgba(200,30,44,0.08);
+    background: rgba(243,230,228,0.07);
+  }
+
+  .search-icon{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color: rgba(200,30,44,0.6);
+    transition: color 0.3s ease;
+    pointer-events:none;
+  }
+
+  .search-box:focus ~ .search-icon{
+    color: #ff3b44;
+    filter: drop-shadow(0 0 4px rgba(255,59,68,0.5));
+  }
+
+  .topbar-actions{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+
+  /* ═══ THEME TOGGLE SWITCH ═══ */
+  .theme-toggle-wrapper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .theme-toggle{
+    position:relative;
+    width:54px;
+    height:28px;
+    background: rgba(243,230,228,0.1);
+    border:1px solid rgba(200,30,44,0.2);
+    border-radius:14px;
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+
+  .theme-toggle:hover{
+    background: rgba(243,230,228,0.15);
+    border-color: rgba(200,30,44,0.3);
+  }
+
+  .theme-toggle-slider{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:22px;
+    height:22px;
+    background: linear-gradient(135deg, var(--ember-hot), #5a0a10);
+    border-radius:50%;
+    transition: transform 0.3s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  body.light .theme-toggle-slider{
+    transform: translateX(26px);
+  }
+
+  /* ═══ LANGUAGE DROPDOWN ═══ */
+  .lang-dropdown{
+    position:relative;
+  }
+
+  .lang-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px;
+    background: rgba(243,230,228,0.05);
+    border:1px solid rgba(200,30,44,0.2);
+    border-radius:8px;
+    color: var(--bone);
+    font-size:14px;
+    cursor:pointer;
+    transition: all 0.2s;
+  }
+
+  .lang-btn:hover{
+    background: rgba(243,230,228,0.08);
+    border-color: rgba(200,30,44,0.3);
+  }
+
+  .lang-menu{
+    display:none;
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    background: rgba(12,4,5,0.95);
+    border:1px solid var(--glass-edge);
+    border-radius:10px;
+    padding:6px;
+    min-width:140px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 16px 40px -10px rgba(0,0,0,0.8);
+    z-index:100;
+    animation: dropIn 0.15s ease both;
+  }
+
+  .lang-menu.open{
+    display:block;
+  }
+
+  .lang-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    color: var(--bone);
+    text-decoration:none;
+    transition: background 0.15s;
+  }
+
+  .lang-item:hover{
+    background: rgba(255,255,255,0.08);
+  }
+
+  .lang-item.active{
+    background: rgba(200,30,44,0.15);
+    color: var(--ember-glow);
+  }
+
+  .icon-btn{
+    padding:8px 16px;
+    background: rgba(200,30,44,0.08);
+    border:1px solid rgba(200,30,44,0.2);
+    border-radius:8px;
+    color: rgba(255,59,68,0.8);
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition: all 0.25s ease;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+
+  .icon-btn:hover{
+    background: rgba(200,30,44,0.15);
+    border-color: rgba(200,30,44,0.4);
+    color: #ff3b44;
+    box-shadow: 0 0 12px rgba(200,30,44,0.15);
+  }
+
+  .user-menu{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 12px 6px 6px;
+    background: rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;
+    cursor:pointer;
+    transition: all 0.2s;
+  }
+
+  .user-menu:hover{
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,90,90,0.25);
+  }
+
+  .user-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    border:2px solid rgba(200,30,44,0.3);
+    padding:2px;
+    background: linear-gradient(135deg, var(--ember-hot), #5a0a10);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:13px;
+    transition: all 0.3s ease;
+    cursor:pointer;
+  }
+
+  .user-avatar:hover{
+    border-color: #ff3b44;
+    box-shadow: 0 0 12px rgba(200,30,44,0.3);
+  }
+
+  .user-name{
+    font-size:13px;
+    color: var(--bone);
+    font-weight:500;
+  }
+
+  /* ═══ CONTENT AREA ═══ */
+  .content-area{
+    flex:1;
+    overflow-y:auto;
+    padding:24px 32px;
+  }
+
+  .card{
+    position:relative;
+    background: var(--glass);
+    border:1px solid var(--glass-edge);
+    border-radius: var(--radius);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow:
+      0 24px 50px -20px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    padding:24px;
+    animation: fadeUp 0.7s cubic-bezier(.2,.9,.25,1) both;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:-1px;
+    border-radius:inherit;
+    padding:1px;
+    background: linear-gradient(135deg, rgba(255,80,90,0.45), transparent 30%, transparent 70%, rgba(255,80,90,0.2));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events:none;
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(18px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .section-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+  }
+
+  .section-header{ flex-wrap:wrap; gap:12px; }
+  .section-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .btn-upload.btn-upload-ghost{
+    background: transparent; color: var(--bone);
+    border:1px solid var(--glass-edge); box-shadow:none;
+  }
+  .btn-upload.btn-upload-ghost:hover{ border-color: var(--ember-hot); }
+  .files-table tr.empty-row td{ text-align:center; padding:28px; color: var(--ash); font-size:14px; }
+  .files-table tr.empty-row:hover td{ background:transparent; }
+  .folder-breadcrumb{
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+    margin:-8px 0 16px; font-size:13px; color: var(--ash);
+  }
+  .folder-breadcrumb a{ color: var(--bone); text-decoration:none; cursor:pointer; }
+  .folder-breadcrumb a:hover{ color: var(--ember-glow); }
+  .folder-breadcrumb .crumb-current{ color: var(--ember-glow); font-weight:600; }
+  .folder-breadcrumb .crumb-sep{ opacity:.5; }
+  .files-table tr.folder-row td:first-child{ cursor:pointer; }
+  .folder-shared{ font-size:11px; color: var(--ash); margin-left:6px; }
+
+  .section-header h2{
+    font-family:'Orbitron', sans-serif;
+    font-size:18px;
+    font-weight:700;
+    color: var(--bone);
+  }
+
+  .btn-upload{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 18px;
+    border:none;
+    border-radius:10px;
+    font-family:'Orbitron', sans-serif;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#160305;
+    text-decoration:none;
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-hot) 60%, #5a0a10);
+    cursor:pointer;
+    box-shadow: 0 12px 26px -10px rgba(200,30,44,0.55);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .btn-upload:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -10px rgba(255,59,68,0.6);
+  }
+
+  /* ═══ FILES TABLE ═══ */
+  .files-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing: 0 6px;
+    padding:0 8px;
+  }
+
+  .files-table thead{
+    border-bottom:1px solid rgba(200,30,44,0.12);
+  }
+
+  .files-table th{
+    padding:14px 20px;
+    text-align:left;
+    font-family:'Orbitron',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: rgba(243,230,228,0.45);
+    user-select:none;
+  }
+
+  .files-table td{
+    padding:16px 20px;
+    color: #f3e6e4;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    vertical-align:middle;
+  }
+
+  /* ═══ LIGNES — Effet "data row" ═══ */
+  .files-table tbody tr{
+    background: rgba(243,230,228,0.02);
+    border:1px solid rgba(200,30,44,0.06);
+    border-radius:12px;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    position:relative;
+    overflow:hidden;
+    animation: fadeInUp 0.4s ease backwards;
+  }
+
+  .files-table tbody tr:nth-child(1){ animation-delay:0.05s; }
+  .files-table tbody tr:nth-child(2){ animation-delay:0.1s; }
+  .files-table tbody tr:nth-child(3){ animation-delay:0.15s; }
+  .files-table tbody tr:nth-child(4){ animation-delay:0.2s; }
+  .files-table tbody tr:nth-child(5){ animation-delay:0.25s; }
+  .files-table tbody tr:nth-child(6){ animation-delay:0.3s; }
+  .files-table tbody tr:nth-child(7){ animation-delay:0.35s; }
+  .files-table tbody tr:nth-child(8){ animation-delay:0.4s; }
+
+  @keyframes fadeInUp{
+    from{ opacity:0; transform:translateY(12px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* Glow subtil au hover */
+  .files-table tbody tr:hover{
+    background: rgba(200,30,44,0.04);
+    border-color: rgba(200,30,44,0.25);
+    transform: translateX(4px);
+    box-shadow: 
+      0 0 0 1px rgba(200,30,44,0.15),
+      0 4px 24px rgba(200,30,44,0.08),
+      inset 0 1px 0 rgba(255,59,68,0.05);
+  }
+
+  .file-name-cell{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .file-icon{
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    transition: all 0.3s ease;
+    background: var(--icon-bg, rgba(200,30,44,0.10));
+    border:1px solid rgba(200,30,44,0.2);
+    color: var(--icon-color, #ff3b44);
+    font-size:18px;
+    flex-shrink:0;
+  }
+
+  .file-icon svg{
+    filter: drop-shadow(0 0 3px var(--icon-glow, rgba(255,59,68,0.3)));
+    transition: filter 0.3s ease;
+  }
+
+  tr:hover .file-icon{
+    box-shadow: 0 0 12px rgba(200,30,44,0.2);
+    transform: scale(1.08);
+  }
+
+  tr:hover .file-icon svg{
+    filter: drop-shadow(0 0 6px var(--icon-glow, rgba(255,59,68,0.6)));
+  }
+
+  .file-name-text{
+    font-weight:500;
+    color: var(--bone);
+  }
+
+  .file-meta{
+    font-size:12px;
+    color: var(--ash);
+    margin-top:2px;
+  }
+
+  .file-size{
+    color: var(--ash);
+    font-size:13px;
+  }
+
+  .file-date{
+    color: var(--ash);
+    font-size:13px;
+  }
+
+  .file-actions{
+    display:flex;
+    gap:6px;
+    justify-content:flex-end;
+    position:relative;
+  }
+
+  .menu-btn{
+    width:32px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: transparent;
+    border:1px solid transparent;
+    border-radius:8px;
+    color: rgba(243,230,228,0.4);
+    cursor:pointer;
+    transition: all 0.2s ease;
+    font-size:18px;
+    line-height:1;
+    opacity:0;
+  }
+
+  tr:hover .menu-btn{
+    opacity:1;
+  }
+
+  .menu-btn:hover{
+    background: rgba(200,30,44,0.1);
+    border-color: rgba(200,30,44,0.25);
+    color: #ff3b44;
+    box-shadow: 0 0 8px rgba(200,30,44,0.15);
+  }
+
+  .menu-btn:active{
+    transform: scale(0.95);
+  }
+
+  .dropdown-menu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:38px;
+    z-index:100;
+    background: rgba(12,4,5,0.95);
+    border:1px solid var(--glass-edge);
+    border-radius:10px;
+    padding:6px;
+    min-width:180px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 16px 40px -10px rgba(0,0,0,0.8);
+    animation: dropIn 0.15s ease both;
+  }
+
+  @keyframes dropIn{
+    from{ opacity:0; transform:translateY(-6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .dropdown-menu.open{
+    display:block;
+  }
+
+  .dropdown-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:13px;
+    color: var(--bone);
+    text-decoration:none;
+    transition: background 0.15s;
+    border:none;
+    background:transparent;
+    width:100%;
+    text-align:left;
+  }
+
+  .dropdown-item:hover{
+    background: rgba(255,255,255,0.08);
+  }
+
+  .dropdown-item.danger{
+    color: #ff7a7a;
+  }
+
+  .dropdown-item.danger:hover{
+    background: rgba(200,30,44,0.18);
+    color: var(--ember-glow);
+  }
+
+  .dropdown-divider{
+    height:1px;
+    background: rgba(255,255,255,0.07);
+    margin:4px 0;
+  }
+
+  .empty-state{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:60px 20px;
+    color: var(--ash);
+  }
+
+  .empty-icon{
+    font-size:56px;
+    color: rgba(255,90,90,0.4);
+    margin-bottom:20px;
+  }
+
+  .empty-state h3{
+    font-family:'Orbitron', sans-serif;
+    font-size:18px;
+    font-weight:600;
+    color: var(--bone);
+    margin-bottom:8px;
+  }
+
+  .empty-state p{
+    font-size:14px;
+    color: var(--ash);
+  }
+
+  /* ═══ FLASH MESSAGES ═══ */
+  .flash{
+    padding:12px 16px;
+    border-radius:10px;
+    margin-bottom:16px;
+    font-size:13px;
+    border:1px solid transparent;
+  }
+
+  .flash.success{
+    background: rgba(46,204,113,0.12);
+    border-color: rgba(46,204,113,0.3);
+    color: #8beeb4;
+  }
+
+  .flash.error{
+    background: rgba(231,76,60,0.12);
+    border-color: rgba(231,76,60,0.3);
+    color: #ff9ba0;
+  }
+
+  .flash.info{
+    background: rgba(52,152,219,0.12);
+    border-color: rgba(52,152,219,0.3);
+    color: #b7c2ff;
+  }
+
+  /* ═══ MODALS ═══ */
+  .modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.8);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .modal.open{
+    display:flex;
+  }
+
+  .modal-content{
+    background: var(--glass);
+    border:1px solid var(--glass-edge);
+    border-radius: var(--radius);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+    padding:28px;
+    width:90%;
+    max-width:480px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8);
+  }
+
+  .modal-header h3{
+    font-family:'Orbitron', sans-serif;
+    font-size:18px;
+    font-weight:700;
+    color: var(--bone);
+    margin-bottom:16px;
+  }
+
+  .form-field{
+    margin-bottom:16px;
+  }
+
+  .form-field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color: var(--ash);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-bottom:6px;
+  }
+
+  .form-field input,
+  .form-field select{
+    width:100%;
+    padding:10px 14px;
+    background: rgba(10,3,4,0.7);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+    color: var(--bone);
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+  }
+
+  .form-field input:focus,
+  .form-field select:focus{
+    border-color: var(--ember-hot);
+  }
+
+  .modal-footer{
+    display:flex;
+    gap:12px;
+    margin-top:20px;
+  }
+
+  .btn-primary{
+    flex:1;
+    padding:12px 20px;
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-hot) 60%, #5a0a10);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:700;
+    font-family:'Orbitron', sans-serif;
+    cursor:pointer;
+    transition: transform 0.15s;
+  }
+
+  .btn-primary:hover{
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary{
+    flex:1;
+    padding:12px 20px;
+    background: transparent;
+    color: var(--bone);
+    border:1px solid var(--glass-edge);
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover{
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,90,90,0.3);
+  }
+
+  /* ═══ USER MENU DROPDOWN ═══ */
+  .user-menu{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .user-menu:hover{
+    background: rgba(255,90,90,0.08);
+  }
+  .user-menu-dropdown{
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(20,8,10,0.95);
+    border: 1px solid rgba(255,90,90,0.25);
+    border-radius: 12px;
+    min-width: 220px;
+    padding: 8px 0;
+    backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,90,90,0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+  }
+  .user-menu.active .user-menu-dropdown{
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .user-menu-header{
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,90,90,0.15);
+    margin-bottom: 4px;
+  }
+  .user-menu-email{
+    font-size: 11px;
+    color: var(--ash);
+    margin-top: 2px;
+  }
+  .user-menu-item{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: var(--bone);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.2s ease;
+  }
+  .user-menu-item:hover{
+    background: rgba(255,90,90,0.12);
+  }
+  .user-menu-item.danger{
+    color: var(--ember-glow);
+  }
+  .user-menu-item.danger:hover{
+    background: rgba(200,30,44,0.2);
+  }
+  .user-menu-icon{
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+  .user-menu-divider{
+    height: 1px;
+    background: rgba(255,90,90,0.15);
+    margin: 4px 0;
+  }
+  
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 768px){
+    .sidebar{
+      position:fixed;
+      left:-260px;
+      top:0;
+      bottom:0;
+      z-index:100;
+      transition: left 0.3s;
+    }
+
+    .sidebar.open{
+      left:0;
+    }
+
+    body{
+      flex-direction:column;
+    }
+
+    .topbar{
+      padding:12px 16px;
+    }
+
+    .content-area{
+      padding:16px;
+    }
+
+    .files-table{
+      font-size:12px;
+    }
+
+    .files-table th,
+    .files-table td{
+      padding:10px 8px;
+    }
+
+    .file-name-cell{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+    }
+  }
+  /* ── Téléphone : menu latéral accessible, tableau lisible ── */
+  .menu-toggle, .sidebar-overlay{ display:none; }
+  @media (max-width: 768px){
+    .menu-toggle{ display:flex; align-items:center; justify-content:center; width:40px; height:40px; flex:0 0 40px;
+      border:1px solid rgba(200,30,44,0.25); border-radius:10px; background:transparent; color:var(--bone);
+      font-size:20px; cursor:pointer; margin-right:10px; }
+    .sidebar-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99; }
+    .sidebar-overlay.open{ display:block; }
+    .topbar{ gap:8px; flex-wrap:wrap; }
+    .search-wrapper{ order:3; flex:1 1 100%; width:auto; min-width:0; }
+    .user-menu .user-name{ display:none; }
+    .files-table th:nth-child(3), .files-table td:nth-child(3){ display:none; }
+    .files-table{ table-layout:fixed; padding:0; }
+    .files-table th:nth-child(1){ width:64% !important; }
+    .files-table tr.empty-row td{ width:auto; }
+    .files-table th:nth-child(2){ width:22% !important; }
+    .files-table th:nth-child(4){ width:14% !important; font-size:0; }
+    .files-table .file-name-text{ word-break:break-word; overflow-wrap:anywhere; }
+    .card{ padding:18px 12px; }
+    .menu-btn{ opacity:1; }
+  }
+  @media (hover: none){ .menu-btn{ opacity:1; } }
+  /* La ligne dont le menu est ouvert passe au-dessus des suivantes */
+  .files-table tbody tr.menu-open{ z-index:30; }
+  .share-tabs{ display:flex; gap:6px; margin:14px 0 16px; }
+  .share-tab{ flex:1; padding:9px 10px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); background:transparent;
+    color:var(--ash); cursor:pointer; font-size:12.5px; font-family:inherit; transition:all 0.2s; }
+  .share-tab.active{ border-color:rgba(255,59,68,0.45); background:rgba(200,30,44,0.14); color:var(--bone); }
+  .share-user-info{ background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:9px;
+    padding:12px 14px; margin-bottom:12px; font-size:13px; }
+  .share-user-info .fp-label{ color:var(--ash); font-size:11.5px; margin-top:8px; }
+  .share-user-info .fp{ font-family:Consolas,'DejaVu Sans Mono','Courier New',monospace; font-weight:700; letter-spacing:1px; color:var(--ember-glow); margin-top:2px; }
+  .share-user-info .fp-hint{ color:var(--ash); font-size:11px; margin-top:6px; line-height:1.4; }
+  .share-msg{ font-size:12.5px; border-radius:8px; padding:9px 12px; margin-bottom:12px; }
+  .share-msg.ok{ background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:#8beeb4; }
+  .share-msg.err{ background:rgba(200,30,44,0.12); border:1px solid rgba(255,80,90,0.35); color:#ff9ba0; }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+</head>
+<body>
+
+<!-- BACKDROP CYBERPUNK -->
+<div class="backdrop">
+  <div class="floor"></div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div class="brand-name">Vault</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item active">
+      <span class="nav-icon">📁</span>
+      {{ t('my_files') }}
+    </a>
+    <a href="/upload" class="nav-item">
+      <span class="nav-icon">↑</span>
+      {{ t('upload') }}
+    </a>
+    
+    <div class="nav-divider"></div>
+    
+    <a href="/trash" class="nav-item">
+      <span class="nav-icon">🗑️</span>
+      {{ t('trash') }}
+    </a>
+    <a href="/transfers" class="nav-item">
+      <span class="nav-icon">📤</span>
+      {{ t('transfers') }}
+    </a>
+    <a href="/shared-with-me" class="nav-item">
+      <span class="nav-icon">👥</span>
+      Partagés avec moi
+    </a>
+    
+    <div class="nav-divider"></div>
+    
+    <a href="/activity" class="nav-item">
+      <span class="nav-icon">📋</span>
+      {{ t('activity') }}
+    </a>
+    <a href="/sessions" class="nav-item">
+      <span class="nav-icon">⏱️</span>
+      {{ t('sessions') }}
+    </a>
+    <a href="/settings" class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      {{ t('settings') }}
+    </a>
+    <a href="/trusted-contacts" class="nav-item">
+      <span class="nav-icon">🛡️</span>
+      Contacts de confiance
+    </a>
+    
+    {% if user.is_admin and session.get('admin_authenticated') %}
+    <div class="nav-divider"></div>
+    <a href="/admin" class="nav-item">
+      <span class="nav-icon">👑</span>
+      Admin
+    </a>
+    {% endif %}
+  </nav>
+
+  <!-- STORAGE BAR (style MEGA) -->
+  <div class="sidebar-storage">
+    <div class="storage-label">
+      {% if user.plan and user.plan != 'free' %}{{ user.plan|upper }}{% else %}{{ t('free') }}{% endif %}
+    </div>
+    <div class="storage-text">
+      <strong>{{ stats.used_space }}</strong> {{ t('used_on') }} <strong>{{ stats.total_space }}</strong>
+    </div>
+    <div class="storage-bar">
+      <div class="storage-bar-fill" style="width:{{ stats.used_percent }}%"></div>
+    </div>
+    <a href="/plans" class="btn-upgrade">
+      {{ t('upgrade_account') }}
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button type="button" class="menu-toggle" id="sidebarToggle" aria-label="Menu">☰</button>
+    <div class="search-wrapper">
+      <input type="text" class="search-box" id="fileSearch" placeholder="{{ t('search_files') }}" autocomplete="off">
+      <span class="search-icon">🔍</span>
+    </div>
+    
+    <div class="topbar-actions">
+      <!-- Theme Toggle Switch -->
+      <div class="theme-toggle-wrapper">
+        <div class="theme-toggle" id="themeToggleBtn" title="{{ t('change_theme') }}">
+          <div class="theme-toggle-slider">
+            <span id="themeIcon">🌙</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Dropdown -->
+      <div class="lang-dropdown">
+        <button class="lang-btn" id="langBtn" title="{{ t('choose_language') }}">
+          <span>🌐</span>
+          <span id="currentLang">{{ lang|upper if lang else 'FR' }}</span>
+        </button>
+        <div class="lang-menu" id="langMenu">
+          <a href="/set_language/fr" class="lang-item {% if lang == 'fr' or not lang %}active{% endif %}">
+            <span>🇫🇷</span>
+            <span>Français</span>
+          </a>
+          <a href="/set_language/en" class="lang-item {% if lang == 'en' %}active{% endif %}">
+            <span>🇬🇧</span>
+            <span>English</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="user-menu" id="userMenu">
+        <div class="user-avatar">{{ user.username[0]|upper }}</div>
+        <span class="user-name">{{ user.username }}</span>
+        
+        <!-- Dropdown Menu -->
+        <div class="user-menu-dropdown">
+          <div class="user-menu-header">
+            <div style="font-weight: 600; font-size: 13px;">{{ user.username }}</div>
+            <div class="user-menu-email">{{ user.email }}</div>
+          </div>
+          
+          <a href="/logout" class="user-menu-item danger">
+            <span class="user-menu-icon">🚪</span>
+            <span>{{ t('logout') }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="flash info" id="recoveryRequestBanner" style="display:none;">
+      🛡️ <span id="recoveryRequestText"></span> <a href="/trusted-contacts" style="color:inherit;font-weight:600;">Voir la demande</a>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h2>{{ t('my_files') }}</h2>
+        <div class="section-actions">
+          <button type="button" class="btn-upload btn-upload-ghost" id="newFolderBtn">📁 Nouveau dossier</button>
+          <a class="btn-upload" id="uploadHereBtn" href="/upload" style="display:none;">⬆ Téléverser ici</a>
+        </div>
+      </div>
+      <nav class="folder-breadcrumb" id="folderBreadcrumb" aria-label="Dossier courant"></nav>
+
+      <!-- FILES TABLE (noms déchiffrés dans le navigateur) -->
+      <table class="files-table">
+        <thead>
+          <tr>
+            <th style="width:45%">{{ t('name') }}</th>
+            <th style="width:15%">{{ t('size') }}</th>
+            <th style="width:20%">{{ t('uploaded') }}</th>
+            <th style="width:20%;text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="filesTableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon">📂</div>
+        <h3>{{ t('no_files') }}</h3>
+        <p>{{ t('files_appear_here') }}</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- RENAME MODAL -->
+<div id="renameModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="renameTitle">{{ t('rename_file') }}</h3>
+    </div>
+    <form id="renameForm" action="javascript:void(0);">
+      <div class="form-field">
+        <label id="renameLabel">{{ t('new_name') }}</label>
+        <input type="text" id="renameInput" placeholder="{{ t('new_name') }}" required>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn-primary">{{ t('confirm') }}</button>
+        <button type="button" class="btn-secondary" id="renameCancelBtn">{{ t('cancel') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div id="shareModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="shareTitle">{{ t('share_file') }}</h3>
+      <p id="shareFileName" style="font-size:13px;color:var(--ash);margin-top:4px;"></p>
+    </div>
+    <div class="share-tabs">
+      <button type="button" class="share-tab active" data-tab="user">👤 Utilisateur Vault</button>
+      <button type="button" class="share-tab" data-tab="link">🔗 Lien</button>
+    </div>
+    <div id="shareUserPane">
+      <div class="form-field">
+        <label>Adresse email du destinataire</label>
+        <input type="email" id="shareUserEmail" placeholder="destinataire@exemple.com" autocomplete="off">
+      </div>
+      <div id="shareUserInfo" class="share-user-info" style="display:none;">
+        <div><strong id="shareUserName"></strong> <span id="shareUserMail" style="color:var(--ash);"></span></div>
+        <div class="fp-label">Empreinte de ses clés :</div>
+        <div class="fp" id="shareUserFp"></div>
+        <div class="fp-hint">Comparez-la avec celle que le destinataire voit dans ses Paramètres avant le premier partage.</div>
+      </div>
+      <div id="shareUserMsg" class="share-msg" style="display:none;"></div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="shareUserBtn">Rechercher</button>
+        <button class="btn-secondary share-close">{{ t('close') }}</button>
+      </div>
+    </div>
+    <div id="shareLinkPane" style="display:none;">
+    <div class="form-field">
+      <label>{{ t('link_duration') }}</label>
+      <select id="shareExpiry">
+        <option value="1">{{ t('1_hour') }}</option>
+        <option value="6">{{ t('6_hours') }}</option>
+        <option value="24" selected>{{ t('24_hours') }}</option>
+        <option value="72">{{ t('3_days') }}</option>
+        <option value="168">{{ t('7_days') }}</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>{{ t('max_downloads_hint') }}</label>
+      <input type="number" id="shareMaxDl" value="0" min="0" max="100">
+    </div>
+    <div id="shareResult" style="display:none;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:8px;padding:12px;margin-top:12px;">
+      <div id="shareUrl" style="font-size:12px;color:#8beeb4;word-break:break-all;margin-bottom:8px;"></div>
+      <button type="button" id="copyShareBtn" style="padding:6px 12px;border:1px solid rgba(46,204,113,0.3);border-radius:6px;background:transparent;color:#8beeb4;cursor:pointer;font-size:12px;">
+        📋 {{ t('copy_link') }}
+      </button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="shareGenerateBtn">{{ t('generate_link') }}</button>
+      <button class="btn-secondary share-close" id="shareCloseBtn">{{ t('close') }}</button>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOVE MODAL (dossiers chiffrés) -->
+<div id="moveModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Déplacer vers un dossier</h3>
+      <p id="moveFileName" style="font-size:13px;color:var(--ash);margin-top:4px;"></p>
+    </div>
+    <div class="form-field">
+      <label>Dossier de destination</label>
+      <select id="moveTarget"></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="moveConfirmBtn">Déplacer</button>
+      <button class="btn-secondary" id="moveCancelBtn">{{ t('cancel') }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="deleteTitle">{{ t('move_to_trash') }}</h3>
+    </div>
+    <p id="deleteText" style="color:var(--ash);margin-bottom:20px;">{{ t('file_will_be_trashed') }}</p>
+    <div class="modal-footer">
+      <button class="btn-primary" id="deleteConfirmBtn">{{ t('confirm') }}</button>
+      <button class="btn-secondary" id="deleteCancelBtn">{{ t('cancel') }}</button>
+    </div>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+window.VAULT_I18N = {
+  rename: {{ t('rename')|tojson }}, download: {{ t('download')|tojson }},
+  share: {{ t('share')|tojson }}, delete: {{ t('delete')|tojson }}
+};
+// Theme toggle
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const icon = document.getElementById('themeIcon');
+  const isLight = document.body.classList.contains('light');
+  icon.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Load theme
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme === 'light'){
+  document.body.classList.add('light');
+  document.getElementById('themeIcon').textContent = '☀️';
+} else {
+  document.getElementById('themeIcon').textContent = '🌙';
+}
+
+// Language dropdown
+function toggleLangMenu(event){
+  event.stopPropagation();
+  const menu = document.getElementById('langMenu');
+  menu.classList.toggle('open');
+}
+
+function closeLangMenu(){
+  document.getElementById('langMenu').classList.remove('open');
+}
+
+// Close lang menu when clicking outside
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.lang-dropdown')){
+    closeLangMenu();
+  }
+});
+
+// Recherche : gérée par vault-files.js (dans tous les dossiers, sur les noms déchiffrés)
+
+// Fenêtres utilisées par vault-files.js (le chiffrement reste dans vault-files.js)
+var SHARE_TITLE = {{ t('share_file')|tojson }};
+var RENAME_TITLE = {{ t('rename_file')|tojson }}, RENAME_LABEL = {{ t('new_name')|tojson }};
+var DELETE_TITLE = {{ t('move_to_trash')|tojson }}, DELETE_TEXT = {{ t('file_will_be_trashed')|tojson }};
+var renameCb = null, shareCb = null, moveCb = null, deleteCb = null, shareUserOps = null, shareRecipient = null;
+function selectShareTab(tab){
+  document.querySelectorAll('.share-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
+  document.getElementById('shareUserPane').style.display = tab === 'user' ? '' : 'none';
+  document.getElementById('shareLinkPane').style.display = tab === 'link' ? '' : 'none';
+}
+function shareUserMsg(text, ok){
+  var el = document.getElementById('shareUserMsg');
+  el.textContent = text; el.className = 'share-msg ' + (ok ? 'ok' : 'err'); el.style.display = 'block';
+}
+function hideRename(){ document.getElementById('renameModal').classList.remove('open'); }
+function hideShare(){ document.getElementById('shareModal').classList.remove('open'); }
+function hideDelete(){ document.getElementById('deleteModal').classList.remove('open'); }
+window.VaultDashboardUI = {
+  showRename: function(name, cb, opts){
+    renameCb = cb;
+    opts = opts || {};
+    document.getElementById('renameTitle').textContent = opts.title || RENAME_TITLE;
+    document.getElementById('renameLabel').textContent = opts.label || RENAME_LABEL;
+    document.getElementById('renameInput').value = name;
+    document.getElementById('renameModal').classList.add('open');
+  },
+  showShare: function(name, cb, userOps){
+    shareCb = cb;
+    shareUserOps = userOps || null;
+    shareRecipient = null;
+    document.getElementById('shareFileName').textContent = name;
+    document.getElementById('shareResult').style.display = 'none';
+    document.getElementById('shareUserEmail').value = '';
+    document.getElementById('shareUserInfo').style.display = 'none';
+    document.getElementById('shareUserMsg').style.display = 'none';
+    document.getElementById('shareUserBtn').textContent = 'Rechercher';
+    document.getElementById('shareTitle').textContent = cb ? SHARE_TITLE : 'Partager le dossier';
+    // Dossier : pas de lien (un lien ne vaut que pour un fichier)
+    document.querySelector('.share-tab[data-tab="link"]').style.display = cb ? '' : 'none';
+    selectShareTab(userOps ? 'user' : 'link');
+    document.getElementById('shareModal').classList.add('open');
+  },
+  showMove: function(name, options, current, cb){
+    moveCb = cb;
+    document.getElementById('moveFileName').textContent = name;
+    var sel = document.getElementById('moveTarget');
+    sel.innerHTML = '';
+    options.forEach(function(o){
+      var opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.label;
+      if(o.id === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById('moveModal').classList.add('open');
+  },
+  confirmDelete: function(cb, opts){
+    opts = opts || {};
+    document.getElementById('deleteTitle').textContent = opts.title || DELETE_TITLE;
+    document.getElementById('deleteText').textContent = opts.text || DELETE_TEXT;
+    deleteCb = cb;
+    document.getElementById('deleteModal').classList.add('open');
+  }
+};
+document.getElementById('renameForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var newName = document.getElementById('renameInput').value.trim();
+  if(newName && renameCb){ renameCb(newName); }
+  hideRename();
+});
+document.getElementById('renameCancelBtn').addEventListener('click', hideRename);
+document.getElementById('shareGenerateBtn').addEventListener('click', function(){
+  if(!shareCb) return;
+  var btn = this; btn.disabled = true;
+  shareCb(document.getElementById('shareExpiry').value, document.getElementById('shareMaxDl').value)
+    .then(function(url){
+      btn.disabled = false;
+      if(!url) return;
+      document.getElementById('shareUrl').textContent = url;
+      document.getElementById('shareResult').style.display = 'block';
+    });
+});
+document.querySelectorAll('.share-close').forEach(function(b){ b.addEventListener('click', hideShare); });
+document.querySelectorAll('.share-tab').forEach(function(b){
+  b.addEventListener('click', function(){ selectShareTab(b.getAttribute('data-tab')); });
+});
+document.getElementById('shareUserEmail').addEventListener('input', function(){
+  shareRecipient = null;
+  document.getElementById('shareUserInfo').style.display = 'none';
+  document.getElementById('shareUserBtn').textContent = 'Rechercher';
+});
+document.getElementById('shareUserBtn').addEventListener('click', function(){
+  if(!shareUserOps) return;
+  var btn = this; btn.disabled = true;
+  document.getElementById('shareUserMsg').style.display = 'none';
+  if(!shareRecipient){
+    shareUserOps.lookup(document.getElementById('shareUserEmail').value.trim().toLowerCase())
+      .then(function(r){
+        shareRecipient = r;
+        document.getElementById('shareUserName').textContent = r.username;
+        document.getElementById('shareUserMail').textContent = r.email;
+        document.getElementById('shareUserFp').textContent = r.fingerprint;
+        document.getElementById('shareUserInfo').style.display = 'block';
+        btn.textContent = r.has_delegation ? 'Partager' : 'Confirmer et partager';
+      })
+      .catch(function(e){ shareUserMsg(e.message, false); })
+      .then(function(){ btn.disabled = false; });
+  } else {
+    btn.textContent = 'Partage en cours...';
+    shareUserOps.shareUser(shareRecipient)
+      .then(function(msg){ shareUserMsg(msg || ('Fichier partagé avec ' + shareRecipient.username + '. Il le trouvera dans « Partagés avec moi ».'), true); btn.textContent = 'Partagé ✓'; })
+      .catch(function(e){ shareUserMsg(e.message, false); btn.textContent = 'Partager'; btn.disabled = false; });
+  }
+});
+document.getElementById('copyShareBtn').addEventListener('click', function(){
+  var url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard.writeText(url).then(function(){ alert("{{ t('link_copied') }}"); });
+});
+document.getElementById('deleteCancelBtn').addEventListener('click', hideDelete);
+document.getElementById('moveCancelBtn').addEventListener('click', function(){ document.getElementById('moveModal').classList.remove('open'); });
+document.getElementById('moveConfirmBtn').addEventListener('click', function(){
+  document.getElementById('moveModal').classList.remove('open');
+  if(moveCb){ moveCb(document.getElementById('moveTarget').value); moveCb = null; }
+});
+document.getElementById('deleteConfirmBtn').addEventListener('click', function(){
+  hideDelete();
+  if(deleteCb){ deleteCb(); deleteCb = null; }
+});
+
+// Close modals on background click
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', function(e){
+    if(e.target === modal){
+      modal.classList.remove('open');
+    }
+  });
+});
+
+
+function closeAllMenus(){
+  document.querySelectorAll('.dropdown-menu').forEach(menu => {
+    menu.classList.remove('open');
+  });
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.menu-btn') && !e.target.closest('.dropdown-menu')){
+    closeAllMenus();
+  }
+  // Close user menu when clicking outside
+  if(!e.target.closest('.user-menu')){
+    document.querySelectorAll('.user-menu').forEach(menu => {
+      menu.classList.remove('active');
+    });
+  }
+});
+
+document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+// Téléphone : ouverture du menu latéral
+(function(){
+  var sb = document.querySelector('.sidebar'), ov = document.getElementById('sidebarOverlay');
+  function setOpen(o){ sb.classList.toggle('open', o); ov.classList.toggle('open', o); }
+  document.getElementById('sidebarToggle').addEventListener('click', function(){ setOpen(!sb.classList.contains('open')); });
+  ov.addEventListener('click', function(){ setOpen(false); });
+})();
+document.getElementById('langBtn').addEventListener('click', toggleLangMenu);
+document.getElementById('userMenu').addEventListener('click', toggleUserMenu);
+
+// User menu toggle
+function toggleUserMenu(event){
+  event.stopPropagation();
+  const menu = event.currentTarget;
+  const isActive = menu.classList.contains('active');
+  
+  // Close all user menus first
+  document.querySelectorAll('.user-menu').forEach(m => {
+    m.classList.remove('active');
+  });
+  
+  // Toggle current menu
+  if(!isActive){
+    menu.classList.add('active');
+  }
+}
+</script>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-icons.js"></script>
+<script src="/static/js/vault-pre.js"></script>
+<script src="/static/js/vault-folders.js"></script>
+<script src="/static/js/vault-files.js"></script>
+<script type="module" src="/static/js/vault-umbral.js"></script>
+<script src="/static/js/vault-dashboard-extra.js"></script>
+
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

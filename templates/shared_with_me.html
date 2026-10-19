@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember:#7a0f16;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;color:var(--bone);
+    min-height:100vh;position:relative;
+  }
+  .container{max-width:900px;margin:0 auto;padding:36px 32px 70px;}
+  .navbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(10,4,5,0.55);border-bottom:1px solid var(--glass-edge);backdrop-filter:blur(20px);margin-bottom:30px;}
+  .nav-brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  h2{font-family:'Orbitron',sans-serif;font-size:22px;margin-bottom:20px;}
+  .flash{padding:11px 14px;border-radius:10px;margin-bottom:16px;font-size:13px;}
+  .flash.success{background:rgba(30,140,80,0.14);color:#8beeb4;border:1px solid rgba(60,200,120,0.35);}
+  .flash.error{background:rgba(200,30,44,0.14);color:#ff9ba0;border:1px solid rgba(255,80,90,0.4);}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:28px;backdrop-filter:blur(22px);margin-bottom:20px;}
+  .file-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,0.02);border-radius:10px;margin-bottom:8px;flex-wrap:wrap;gap:10px;}
+  .file-row-content{display:flex;align-items:center;gap:12px;flex:1;min-width:200px;}
+  .file-icon{
+    width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    transition:all 0.3s ease;background:var(--icon-bg,rgba(200,30,44,0.10));
+    border:1px solid rgba(200,30,44,0.2);color:var(--icon-color,#ff3b44);flex-shrink:0;
+  }
+  .file-icon svg{filter:drop-shadow(0 0 3px var(--icon-glow,rgba(255,59,68,0.3)));transition:filter 0.3s ease;}
+  .file-row:hover .file-icon{box-shadow:0 0 12px rgba(200,30,44,0.2);transform:scale(1.08);}
+  .file-row:hover .file-icon svg{filter:drop-shadow(0 0 6px var(--icon-glow,rgba(255,59,68,0.6)));}
+  .file-info{flex:1;min-width:200px;}
+  .file-name{font-size:14px;color:var(--bone);font-weight:500;}
+  .file-meta{font-size:11px;color:var(--ash);margin-top:3px;}
+  .expired-tag{display:inline-block;background:rgba(200,30,44,0.2);color:var(--ember-glow);padding:2px 8px;border-radius:4px;font-size:10px;margin-left:6px;}
+  .btn-group{display:flex;gap:8px;flex-shrink:0;}
+  .btn{
+    padding:8px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;
+    font-family:'Inter',sans-serif;font-weight:600;transition:transform 0.15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-restore{background:rgba(30,140,80,0.15);color:#8beeb4;border:1px solid rgba(60,200,120,0.3);}
+  .btn-delete{background:rgba(200,30,44,0.15);color:var(--ember-glow);border:1px solid rgba(255,90,90,0.3);}
+  .btn-empty{background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot)60%,#5a0a10);color:#160305;font-weight:700;padding:10px 18px;}
+  .back-link{color:var(--ember-glow);text-decoration:none;font-size:13px;margin-top:20px;display:inline-block;}
+  .back-link:hover{color:#fff;}
+  .empty{text-align:center;padding:40px;color:var(--ash);}
+
+  .modal-overlay{
+    display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;
+  }
+  .modal-card{
+    background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);
+    padding:32px 28px 24px;backdrop-filter:blur(22px);width:440px;text-align:center;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
+  }
+  .modal-icon{color:var(--ember-glow);margin-bottom:14px;}
+  .modal-icon-restore{color:#8beeb4;margin-bottom:14px;}
+  .modal-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--ember-glow);}
+  .modal-title-restore{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:#8beeb4;}
+  .modal-message{font-size:13px;color:var(--ash);margin-bottom:22px;line-height:1.5;}
+  .modal-btns{display:flex;gap:12px;}
+  .modal-btn{
+    flex:1;padding:12px 16px;border-radius:10px;font-family:'Orbitron',sans-serif;
+    font-weight:700;font-size:12.5px;text-transform:uppercase;cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  .modal-btn:hover{transform:translateY(-2px);}
+  .modal-btn-cancel{background:transparent;color:var(--bone);border:1px solid var(--glass-edge);}
+  .modal-btn-confirm{background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot)60%,#5a0a10);color:#160305;border:none;}
+  .modal-btn-confirm-restore{background:rgba(30,140,80,0.3);color:#8beeb4;border:1px solid rgba(60,200,120,0.4);}
+  .intro{font-size:13px;color:var(--ash);margin:-8px 0 18px;line-height:1.5;}
+  .folder-group{margin:14px 0 8px;}
+  .folder-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--glass-edge);border-radius:10px;cursor:pointer;user-select:none;}
+  .folder-head:hover{border-color:var(--ember-hot);}
+  .folder-head .fh-icon{font-size:20px;}
+  .folder-head .fh-name{font-size:14px;font-weight:600;color:var(--bone);}
+  .folder-head .fh-meta{font-size:11px;color:var(--ash);margin-top:2px;}
+  .folder-head .fh-caret{margin-left:auto;color:var(--ash);transition:transform .2s;}
+  .folder-group.closed .fh-caret{transform:rotate(-90deg);}
+  .folder-group.closed .folder-files{display:none;}
+  .folder-files{margin:8px 0 0 22px;padding-left:12px;border-left:1px solid var(--glass-edge);}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="navbar">
+  <div class="nav-brand">
+    <div class="brand-mark">V</div>
+    <div class="brand-name">Vault</div>
+  </div>
+  <a href="/dashboard" style="color:var(--ash);text-decoration:none;font-size:13px;">← {{ t('dashboard') }}</a>
+</div>
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <h2>👥 Partagés avec moi</h2>
+  </div>
+  <p class="intro">Fichiers que d'autres utilisateurs Vault vous ont partagés. Le serveur les a re-chiffrés pour vous sans pouvoir les lire : ils sont déchiffrés ici, dans votre navigateur.</p>
+  <div class="flash error" id="sharedMsg" style="display:none;"></div>
+  <div class="card">
+    <div id="sharedWithMeList"></div>
+    <div class="empty" id="sharedEmpty" style="display:none;">
+      <p style="font-size:16px;color:var(--bone);margin-bottom:6px;">Aucun fichier partagé avec vous</p>
+      <span style="font-size:13px;">Les fichiers que l'on vous partage apparaîtront ici.</span>
+    </div>
+  </div>
+  <a href="/dashboard" class="back-link">← {{ t('back_to_dashboard') }}</a>
+</div>
+
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-icons.js"></script>
+<script src="/static/js/vault-pre.js"></script>
+<script src="/static/js/vault-shared.js"></script>
+<script type="module" src="/static/js/vault-umbral.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

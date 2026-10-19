@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;position:relative;}
+  .navbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 32px;background:rgba(10,4,5,0.55);border-bottom:1px solid var(--glass-edge);backdrop-filter:blur(20px);}
+  .nav-brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid rgba(255,90,90,0.35);border-radius:8px;color:var(--bone);font-size:12.5px;text-decoration:none;background:transparent;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(200,30,44,0.16);}
+  .main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:36px 32px 70px;}
+  .page-header{margin-bottom:28px;}
+  .page-header h1{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .page-header p{font-size:13px;color:var(--ash);margin-top:5px;}
+  .flash{font-size:13px;padding:11px 14px;border-radius:10px;margin-bottom:16px;border:1px solid transparent;}
+  .flash.success{background:rgba(30,140,80,0.14);border-color:rgba(60,200,120,0.35);color:#8beeb4;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+  .stat{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:18px 20px;backdrop-filter:blur(22px);}
+  .stat .val{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .stat .lbl{font-size:11px;color:var(--ash);margin-top:4px;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:24px 26px;backdrop-filter:blur(22px);margin-bottom:20px;}
+  .card h2{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ash);margin-bottom:7px;}
+  .field input{width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;color:var(--bone);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
+  .field input:focus{border-color:var(--ember-hot);}
+  .field input::placeholder{color:#5c4a4a;}
+  .field .hint{font-size:11px;color:var(--ash);margin-top:4px;}
+  .submit-btn{padding:12px 22px;border:none;border-radius:10px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#160305;background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 8px 20px -6px rgba(200,30,44,0.5);}
+  .submit-btn:hover{transform:translateY(-1px);}
+  .quota-bar{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px;}
+  .quota-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ember-hot),var(--ember-glow));}
+  .quota-info{font-size:12px;color:var(--ash);margin-top:6px;}
+  .account-info{display:flex;flex-direction:column;gap:10px;}
+  .info-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .info-row:last-child{border-bottom:none;}
+  .info-row .ilabel{color:var(--ash);}
+  .info-row .ivalue{color:var(--bone);font-weight:500;}
+  @media(max-width:600px){.stats-row{grid-template-columns:1fr;}.main{padding:24px 16px 50px;}.request-row{flex-wrap:wrap;}.row-actions{width:100%;}.row-actions button{flex:1;}}
+  .lang-select:focus{ border-color:var(--ember-hot) !important; }
+  .links-btn:hover{ background:rgba(200,30,44,0.15); }
+  .fp{ font-family:Consolas,'DejaVu Sans Mono','Courier New',monospace; font-weight:700; letter-spacing:1px; color:var(--ember-glow); }
+  .explain{font-size:13px;color:var(--ash);line-height:1.55;margin:-6px 0 16px;}
+  .status-ok{font-size:13.5px;color:#8beeb4;margin-bottom:10px;}
+  .status-off{font-size:13px;color:var(--ash);}
+  .contact-list{list-style:none;font-size:13.5px;line-height:1.9;margin-bottom:10px;}
+  .link-danger{background:none;border:none;color:var(--ember-glow);font-size:12.5px;cursor:pointer;padding:0;margin-top:4px;}
+  .status-wait{font-size:13.5px;color:#e2c07a;margin-bottom:10px;}
+  .badge{font-size:11.5px;padding:2px 8px;border-radius:20px;margin-left:6px;white-space:nowrap;}
+  .b-pending{background:rgba(226,192,122,0.12);color:#e2c07a;}
+  .b-ok{background:rgba(60,200,120,0.12);color:#8beeb4;}
+  .b-no{background:rgba(255,80,90,0.12);color:#ff9ba0;}
+  .row-actions{display:flex;gap:8px;}
+  .ghost.small{padding:9px 16px;font-size:11px;border:1px solid var(--glass-edge);border-radius:10px;background:transparent;color:var(--ash);cursor:pointer;}
+  .ghost.small:hover{color:var(--bone);border-color:var(--ember-glow);}
+  .request-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,0.05);}
+  .request-name{font-size:14px;font-weight:600;}
+  .request-meta{font-size:12px;color:var(--ash);margin-top:3px;}
+  .submit-btn.small{padding:9px 16px;font-size:11px;}
+  .flash.info{background:rgba(90,110,220,0.12);border-color:rgba(120,140,255,0.35);color:#b7c2ff;}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body data-email="{{ user.email }}">
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="brand-mark">V</div>
+    <span class="brand-name">Vault</span>
+  </div>
+  <a href="/dashboard" class="back-btn">← {{ t('dashboard') }}</a>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Contacts de confiance</h1>
+    <p>Si vous perdez votre mot de passe et votre phrase de 12 mots, deux de vos trois contacts de récupération pourront valider la récupération de votre compte.</p>
+  </div>
+
+  <div class="card">
+    <h2>État</h2>
+    <div id="contactsStatus"><p class="status-off">Chargement...</p></div>
+    <button type="button" class="link-danger" id="removeContactsBtn" style="display:none;">Retirer mes contacts de confiance</button>
+  </div>
+
+  <div class="card">
+    <h2 id="setupTitle">Choisir mes contacts de récupération</h2>
+    <p class="explain">Choisissez <strong>3 personnes</strong> qui ont un compte Vault. Elles reçoivent un email d'invitation et doivent <strong>accepter</strong> dans leur compte. Si un jour vous perdez l'accès, <strong>2 d'entre elles</strong> devront valider votre demande. Votre clé de récupération est découpée en 3 parts dans votre navigateur (partage de secret de Shamir) ; chaque part est chiffrée pour un contact : le serveur ne peut en lire aucune, et une part seule ne révèle rien.</p>
+    <div id="contactsMsg" class="flash" style="display:none;"></div>
+    <form id="contactsForm" action="javascript:void(0);" autocomplete="off">
+      <div class="field">
+        <label>Votre mot de passe</label>
+        <input type="password" id="cfPassword" placeholder="••••••••" required autocomplete="current-password">
+        <div class="hint">Nécessaire pour créer la copie de secours de votre clé privée.</div>
+      </div>
+      {% for n in range(1, 4) %}
+      <div class="field">
+        <label>Email du contact {{ n }}</label>
+        <input type="email" id="cfContact{{ n }}" placeholder="contact{{ n }}@exemple.com" required>
+      </div>
+      {% endfor %}
+      <button type="submit" class="submit-btn">Envoyer les invitations</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Invitations reçues</h2>
+    <p class="explain">Des utilisateurs qui vous proposent d'être leur contact de récupération.</p>
+    <div id="invitationsMsg" class="flash" style="display:none;"></div>
+    <div id="invitationsList"></div>
+    <p class="status-off" id="invitationsEmpty" style="display:none;">Aucune invitation en attente.</p>
+    <div id="acceptedBox" style="display:none;margin-top:14px;">
+      <p class="explain" style="margin:0 0 6px;">Vous êtes contact de récupération de :</p>
+      <ul class="contact-list" id="acceptedList"></ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Demandes de récupération à valider</h2>
+    <p class="explain">Quand une personne dont vous êtes contact demande à récupérer son compte, sa demande apparaît ici. Vérifiez toujours son identité par téléphone ou en personne avant de valider, et lisez-lui l'empreinte de la demande : elle doit être identique à celle qu'il voit sur son écran.</p>
+    <div id="requestsMsg" class="flash" style="display:none;"></div>
+    <div id="requestsList"></div>
+    <p class="status-off" id="requestsEmpty" style="display:none;">Aucune demande en attente.</p>
+  </div>
+</main>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-bip39.js"></script>
+<script src="/static/js/vault-shamir.js"></script>
+<script src="/static/js/vault-pre.js"></script>
+<script src="/static/js/vault-trusted.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

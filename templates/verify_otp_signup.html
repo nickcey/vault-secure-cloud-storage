@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<link rel="stylesheet" href="/static/loader.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --void:#070404; --void-deep:#030101; --ember:#7a0f16; --ember-hot:#c81e2c;
+    --ember-glow:#ff3b44; --bone:#f3e6e4; --ash:#9a7f7e;
+    --glass:rgba(35,12,14,0.35); --glass-edge:rgba(255,90,90,0.16); --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;color:var(--bone);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card{
+    background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);
+    padding:38px 36px 32px;backdrop-filter:blur(22px);width:420px;text-align:center;
+  }
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:26px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--ember-hot),#3a0409);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 16px rgba(200,30,44,0.5);
+    font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;
+  }
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  h2{font-family:'Orbitron',sans-serif;font-size:20px;margin-bottom:6px;color:var(--ember-glow);}
+  .sub{font-size:13px;color:var(--ash);margin-bottom:20px;}
+  .flash{font-size:13px;padding:11px 14px;border-radius:10px;margin-bottom:14px;border:1px solid transparent;text-align:left;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .field{margin-bottom:16px;}
+  .field input{
+    width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;padding:14px 14px;color:var(--bone);font-size:20px;
+    text-align:center;letter-spacing:8px;outline:none;
+  }
+  .field input:focus{border-color:var(--ember-hot);}
+  .submit-btn{
+    width:100%;padding:14px 16px;border:none;border-radius:11px;
+    font-family:'Orbitron',sans-serif;font-weight:700;font-size:13.5px;
+    text-transform:uppercase;color:#160305;
+    background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot)60%,#5a0a10);
+    cursor:pointer;
+  }
+  .submit-btn:hover{transform:translateY(-2px);}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+<link rel="stylesheet" href="/static/css/top_controls.css">
+</head>
+<body>
+{% include 'partials/top_controls.html' %}
+
+  <div class="card">
+  <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
+  <h2>Vérification email</h2>
+  <p class="sub">Un code à 6 chiffres a été envoyé à votre adresse email. Saisissez-le ci-dessous.</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <form method="POST" id="otpSignupForm">
+          {% include 'partials/csrf_token.html' %}
+<div class="field">
+      <input type="text" name="otp_code" id="signupOtp" placeholder="000000" inputmode="numeric" autocomplete="one-time-code" required autofocus>
+    </div>
+    <button type="submit" class="submit-btn">Vérifier</button>
+  </form>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+// Code collé depuis le courriel : on ne garde que les 6 chiffres
+(function(){
+  var i = document.getElementById('signupOtp');
+  if (i) i.addEventListener('input', function(){ i.value = i.value.replace(/\D/g, '').slice(0, 6); });
+})();
+var form = document.getElementById('otpSignupForm');
+var btn = form.querySelector('button[type="submit"]');
+
+form.addEventListener('submit', function(e) {
+  btn.classList.add('btn-loader');
+  btn.disabled = true;
+});
+</script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

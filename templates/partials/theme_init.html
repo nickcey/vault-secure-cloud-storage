@@ -1,0 +1,20 @@
+{% if lang == 'en' %}<script src="/i18n/en.js"></script>
+<script src="/static/js/vault-i18n.js"></script>{% endif %}
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+<meta name="theme-color" content="#0b0606">
+<link rel="manifest" href="/manifest.webmanifest">
+<script src="/static/js/vault-pwa.js"></script>
+<!-- Anti-FOUC : Applique le thème AVANT le premier rendu -->
+<script nonce="{{ csp_nonce }}">
+(function(){ 
+  if (localStorage.getItem('vault_theme') === 'light') {
+    document.documentElement.classList.add('light');
+    if (document.body) document.body.classList.add('light');
+  }
+})();
+</script>
+<!-- Chargement des styles de thème -->
+<link rel="stylesheet" href="/static/theme.css">
+<script src="/static/theme.js"></script>

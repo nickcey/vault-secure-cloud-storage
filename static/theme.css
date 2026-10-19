@@ -1,0 +1,1160 @@
+/* ═══════════════════════════════════════════════
+   Vault — Theme System
+   Mode sombre par défaut + Mode clair (datacenter)
+   Spécificité maximale avec !important systématique
+   ═══════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════
+   MODE SOMBRE (par défaut)
+   ══════════════════════════════════════════════════ */
+
+html, body {
+  background: #070404 !important;
+  color: #f3e6e4 !important;
+}
+
+.backdrop {
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(200,30,44,0.16), transparent 45%),
+    radial-gradient(ellipse at 82% 78%, rgba(120,10,20,0.20), transparent 50%),
+    linear-gradient(180deg, #030101 0%, #070404 60%) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   MODE CLAIR (html.light, body.light)
+   ══════════════════════════════════════════════════ */
+
+html.light,
+html.light body,
+body.light {
+  background: #eef0f3 !important;
+  color: #1a1d23 !important;
+}
+
+html.light .backdrop,
+body.light .backdrop {
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(217, 37, 52, 0.03), transparent 45%),
+    radial-gradient(ellipse at 85% 85%, rgba(185, 28, 44, 0.04), transparent 50%),
+    linear-gradient(180deg, #eef0f3 0%, #e8eaee 60%) !important;
+}
+
+/* Grille au sol - quasi invisible en mode clair */
+html.light .floor,
+body.light .floor { 
+  opacity: 0.04 !important;
+  background-image:
+    linear-gradient(rgba(26, 29, 35, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 29, 35, 0.04) 1px, transparent 1px) !important;
+}
+
+/* Particules - "Data Sparks" très subtiles */
+html.light .ember-particle,
+body.light .ember-particle {
+  background: #ff6b6b !important;
+  opacity: 0.15 !important;
+  box-shadow: 0 0 4px 1px rgba(255, 107, 107, 0.2) !important;
+}
+
+/* ── Navbar / Topbar ── */
+html.light .navbar,
+html.light .topbar,
+body.light .navbar,
+body.light .topbar {
+  background: rgba(247, 248, 250, 0.95) !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .brand-name,
+html.light .nav-username,
+html.light .user-name,
+body.light .brand-name,
+body.light .nav-username,
+body.light .user-name { 
+  color: #1a1d23 !important; 
+}
+
+html.light .nav-link,
+body.light .nav-link { 
+  color: #4a5568 !important; 
+}
+
+html.light .nav-link:hover,
+body.light .nav-link:hover { 
+  color: #1a1d23 !important; 
+  background: #e2e4e9 !important;
+}
+
+html.light .logout-btn,
+html.light .logout-link,
+html.light .back-btn,
+html.light .nav-back,
+body.light .logout-btn,
+body.light .logout-link,
+body.light .back-btn,
+body.light .nav-back { 
+  color: #1a1d23 !important; 
+  border-color: #d1d5db !important; 
+}
+
+html.light .logout-btn:hover,
+html.light .logout-link:hover,
+html.light .back-btn:hover,
+html.light .nav-back:hover,
+body.light .logout-btn:hover,
+body.light .logout-link:hover,
+body.light .back-btn:hover,
+body.light .nav-back:hover { 
+  background: #e2e4e9 !important; 
+  border-color: #d92534 !important;
+}
+
+html.light .nav-avatar,
+body.light .nav-avatar { 
+  background: rgba(217, 37, 52, 0.1) !important; 
+  border: 2px solid #d1d5db !important; 
+}
+
+/* ── Cards / Panels / Modales - Glassmorphism ── */
+html.light .card,
+html.light .panel,
+html.light .auth-card,
+html.light .profile-card,
+html.light .quota-panel,
+html.light .chart-wrapper,
+html.light .kpi-card,
+html.light .stat-card,
+html.light .security-card,
+html.light .plan-card,
+html.light .recap,
+html.light .modal-card,
+html.light .payment-card,
+html.light .rename-card,
+html.light .share-card,
+body.light .card,
+body.light .panel,
+body.light .auth-card,
+body.light .profile-card,
+body.light .quota-panel,
+body.light .chart-wrapper,
+body.light .kpi-card,
+body.light .stat-card,
+body.light .security-card,
+body.light .plan-card,
+body.light .recap,
+body.light .modal-card,
+body.light .payment-card,
+body.light .rename-card,
+body.light .share-card {
+  background: rgba(247, 248, 250, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+html.light .card::before,
+html.light .auth-card::before,
+body.light .card::before,
+body.light .auth-card::before { 
+  display: none !important; 
+}
+
+/* ── Textes - Hiérarchie claire ── */
+html.light h1, html.light h2, html.light h3, html.light h4,
+html.light .stat-value, html.light .kpi-value,
+html.light .file-name,
+html.light .file-name-text,
+html.light .cell-user-name,
+body.light .file-name,
+body.light .file-name-text,
+body.light .cell-user-name { 
+  color: #1a1d23 !important;
+  font-weight: 500 !important;
+}
+
+html.light .file-meta,
+html.light .file-type,
+html.light .file-extension,
+body.light .file-meta,
+body.light .file-type,
+body.light .file-extension {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+html.light .file-icon,
+body.light .file-icon {
+  background: rgba(217, 37, 52, 0.12) !important;
+  border: 1px solid rgba(217, 37, 52, 0.25) !important;
+  color: #d92534 !important;
+}
+
+html.light .profile-name, html.light .plan-name,
+html.light .activity-text, html.light .revenue-value,
+html.light .admin-name, html.light .brand-name,
+html.light .dropzone-text, html.light .ip,
+html.light .link-label, html.light .info-row .ivalue,
+html.light .session-info .ip,
+body.light h1, body.light h2, body.light h3, body.light h4,
+body.light .stat-value, body.light .kpi-value,
+body.light .file-name, body.light .cell-user-name,
+body.light .profile-name, body.light .plan-name,
+body.light .activity-text, body.light .revenue-value,
+body.light .admin-name, body.light .brand-name,
+body.light .dropzone-text, body.light .ip,
+body.light .link-label, body.light .info-row .ivalue,
+body.light .session-info .ip { 
+  color: #1a1d23 !important; 
+}
+
+html.light p,
+html.light .stat-label, html.light .kpi-label,
+html.light .file-meta, html.light .storage-caption,
+html.light .cell-user-email, html.light .profile-email,
+html.light .admin-email, html.light .result-count,
+html.light .panel-empty, html.light .activity-time,
+html.light .quota-text, html.light .cell-sub,
+html.light .plan-desc, html.light .plan-period,
+html.light .link-meta, html.light .info-row .ilabel,
+html.light .session-info .agent,
+html.light .session-info .dates,
+html.light .dropzone-subtext, html.light .sub,
+html.light .progress-text, html.light .switch-line,
+html.light .eyebrow,
+html.light .hero-text p,
+body.light p,
+body.light .stat-label, body.light .kpi-label,
+body.light .file-meta, body.light .storage-caption,
+body.light .cell-user-email, body.light .profile-email,
+body.light .admin-email, body.light .result-count,
+body.light .panel-empty, body.light .activity-time,
+body.light .quota-text, body.light .cell-sub,
+body.light .plan-desc, body.light .plan-period,
+body.light .link-meta, body.light .info-row .ilabel,
+body.light .session-info .agent,
+body.light .session-info .dates,
+body.light .dropzone-subtext, body.light .sub,
+body.light .progress-text, body.light .switch-line,
+body.light .eyebrow,
+body.light .hero-text p { 
+  color: #4a5568 !important; 
+}
+
+html.light .switch-line a,
+html.light .back-link,
+body.light .switch-line a,
+body.light .back-link { 
+  color: #d92534 !important; 
+  border-bottom-color: rgba(217, 37, 52, 0.3) !important;
+}
+
+html.light .switch-line a:hover,
+html.light .back-link:hover,
+body.light .switch-line a:hover,
+body.light .back-link:hover { 
+  color: #b91c2c !important; 
+  border-bottom-color: #b91c2c !important;
+}
+
+/* ── Inputs / Selects / Textareas ── */
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input[type="number"],
+html.light input[type="tel"],
+html.light input[type="date"],
+html.light select,
+html.light textarea,
+html.light .search-box,
+html.light .toolbar input,
+html.light .toolbar select,
+html.light .share-field input,
+html.light .share-field select,
+html.light .form-field input,
+html.light .form-field select,
+html.light .promo-input,
+body.light input[type="text"],
+body.light input[type="email"],
+body.light input[type="password"],
+body.light input[type="number"],
+body.light input[type="tel"],
+body.light input[type="date"],
+body.light select,
+body.light textarea,
+body.light .search-box,
+body.light .toolbar input,
+body.light .toolbar select,
+body.light .share-field input,
+body.light .share-field select,
+body.light .form-field input,
+body.light .form-field select,
+body.light .promo-input {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #1a1d23 !important;
+}
+
+html.light input::placeholder,
+html.light select::placeholder,
+html.light textarea::placeholder,
+html.light .search-box::placeholder,
+body.light input::placeholder,
+body.light select::placeholder,
+body.light textarea::placeholder,
+body.light .search-box::placeholder { 
+  color: #8b95a5 !important; 
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus,
+body.light input:focus,
+body.light select:focus,
+body.light textarea:focus { 
+  border-color: #d92534 !important; 
+  box-shadow: 0 0 0 3px rgba(217, 37, 52, 0.15) !important; 
+  outline: none !important;
+}
+
+html.light .field label,
+html.light .form-field label,
+html.light .share-field label,
+body.light .field label,
+body.light .form-field label,
+body.light .share-field label { 
+  color: #4a5568 !important; 
+}
+
+html.light .toggle-password,
+body.light .toggle-password { 
+  color: #4a5568 !important; 
+}
+
+html.light .toggle-password:hover,
+body.light .toggle-password:hover { 
+  color: #1a1d23 !important; 
+}
+
+/* ── Dropzone upload ── */
+html.light .dropzone,
+body.light .dropzone {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 2px dashed #d1d5db !important;
+}
+
+html.light .dropzone:hover,
+body.light .dropzone:hover { 
+  background: rgba(255, 255, 255, 0.95) !important; 
+  border-color: #d92534 !important;
+}
+
+html.light .dropzone.has-file,
+body.light .dropzone.has-file { 
+  background: rgba(217, 37, 52, 0.03) !important; 
+  border-color: #d92534 !important;
+}
+
+html.light .dropzone.too-large,
+body.light .dropzone.too-large { 
+  background: rgba(239, 68, 68, 0.05) !important; 
+  border-color: #ef4444 !important;
+}
+
+html.light .file-list-item,
+body.light .file-list-item {
+  background: rgba(217, 37, 52, 0.04) !important;
+  border: 1px solid #e5e7eb !important;
+  color: #1a1d23 !important;
+}
+
+html.light .file-list-item .name,
+body.light .file-list-item .name { 
+  color: #1a1d23 !important; 
+}
+
+html.light .file-list-item .size,
+html.light .file-list-item .remove,
+body.light .file-list-item .size,
+body.light .file-list-item .remove { 
+  color: #4a5568 !important; 
+}
+
+html.light .progress-bar,
+body.light .progress-bar { 
+  background: rgba(209, 213, 219, 0.3) !important; 
+}
+
+html.light .progress-fill,
+body.light .progress-fill {
+  background: linear-gradient(90deg, #d92534, #b91c2c) !important;
+}
+
+/* ── Tables ── */
+html.light .data-table th,
+html.light .files-table th,
+body.light .data-table th,
+body.light .files-table th { 
+  color: #4a5568 !important; 
+  border-bottom: 2px solid #e5e7eb !important; 
+}
+
+html.light .data-table td,
+html.light .files-table td,
+body.light .data-table td,
+body.light .files-table td { 
+  border-bottom: 1px solid #e5e7eb !important; 
+  color: #1a1d23 !important; 
+}
+
+html.light .data-table tr:hover td,
+html.light .files-table tbody tr:hover td,
+body.light .data-table tr:hover td,
+body.light .files-table tbody tr:hover td { 
+  background: #e2e4e9 !important; 
+}
+
+html.light .data-table tfoot td,
+body.light .data-table tfoot td { 
+  border-top: 2px solid #d1d5db !important; 
+  color: #1a1d23 !important; 
+}
+
+html.light .files-table tbody tr,
+body.light .files-table tbody tr {
+  background: rgba(247, 248, 250, 0.5) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+html.light .files-table tbody tr:hover,
+body.light .files-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #d92534 !important;
+  box-shadow: 
+    0 4px 8px rgba(217, 37, 52, 0.08),
+    0 0 0 1px rgba(217, 37, 52, 0.1) !important;
+}
+
+/* ── File cards dashboard ── */
+html.light .file-card,
+body.light .file-card {
+  background: rgba(247, 248, 250, 0.8) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+html.light .file-card:hover,
+body.light .file-card:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d92534 !important;
+  box-shadow: 
+    0 4px 6px -1px rgba(217, 37, 52, 0.1),
+    0 2px 4px -1px rgba(217, 37, 52, 0.06) !important;
+}
+
+html.light .file-menu-btn,
+body.light .file-menu-btn { 
+  color: #4a5568 !important; 
+}
+
+html.light .file-menu-btn:hover,
+body.light .file-menu-btn:hover { 
+  background: #e2e4e9 !important; 
+  color: #1a1d23 !important; 
+}
+
+html.light .file-dropdown,
+body.light .file-dropdown {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+html.light .dd-item,
+body.light .dd-item { 
+  color: #1a1d23 !important; 
+  background: transparent !important; 
+}
+
+html.light .dd-item:hover,
+body.light .dd-item:hover { 
+  background: #e2e4e9 !important; 
+}
+
+html.light .dd-item.danger:hover,
+body.light .dd-item.danger:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+}
+
+html.light .dd-sep,
+body.light .dd-sep { 
+  background: #e5e7eb !important; 
+}
+
+/* ── Sidebar verticale (dashboard) ── */
+html.light .sidebar,
+body.light .sidebar {
+  background: rgba(232, 234, 238, 0.97) !important;
+  border-right: 1px solid #d1d5db !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .sidebar-brand,
+body.light .sidebar-brand { 
+  border-bottom: 1px solid #e5e7eb !important; 
+}
+
+html.light .nav-item,
+body.light .nav-item { 
+  color: #4a5568 !important; 
+}
+
+html.light .nav-item:hover,
+body.light .nav-item:hover { 
+  background: #e2e4e9 !important; 
+  color: #1a1d23 !important; 
+}
+
+html.light .nav-item.active,
+body.light .nav-item.active { 
+  background: rgba(217, 37, 52, 0.08) !important; 
+  color: #d92534 !important; 
+  border-left-color: #d92534 !important;
+}
+
+html.light .sidebar-footer,
+body.light .sidebar-footer { 
+  border-top: 1px solid #e5e7eb !important; 
+}
+
+/* ── Storage bar (sidebar) ── */
+html.light .storage-bar,
+html.light .quota-bar,
+html.light .quota-bar-full,
+html.light .quota-track,
+html.light .plan-bar-track,
+body.light .storage-bar,
+body.light .quota-bar,
+body.light .quota-bar-full,
+body.light .quota-track,
+body.light .plan-bar-track { 
+  background: rgba(209, 213, 219, 0.3) !important; 
+}
+
+html.light .storage-text strong,
+html.light .storage-caption,
+body.light .storage-text strong,
+body.light .storage-caption { 
+  color: #1a1d23 !important; 
+}
+
+/* ── Flash messages ── */
+html.light .flash.success,
+body.light .flash.success { 
+  background: rgba(16, 185, 129, 0.12) !important; 
+  color: #0d7a4f !important; 
+  border: 1px solid rgba(16, 185, 129, 0.3) !important; 
+}
+
+html.light .flash.error,
+body.light .flash.error { 
+  background: rgba(239, 68, 68, 0.12) !important; 
+  color: #b91c1c !important; 
+  border: 1px solid rgba(239, 68, 68, 0.3) !important; 
+}
+
+html.light .flash.info,
+body.light .flash.info { 
+  background: rgba(59, 130, 246, 0.12) !important; 
+  color: #1e40af !important; 
+  border: 1px solid rgba(59, 130, 246, 0.3) !important; 
+}
+
+html.light .flash.warning,
+body.light .flash.warning {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #92400e !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+/* ── Modal overlays ── */
+html.light .modal-overlay,
+body.light .modal-overlay { 
+  background: rgba(26, 29, 35, 0.4) !important; 
+  backdrop-filter: blur(4px) !important;
+}
+
+html.light .modal-message,
+body.light .modal-message { 
+  color: #4a5568 !important; 
+}
+
+html.light .modal-btn-cancel,
+body.light .modal-btn-cancel { 
+  color: #1a1d23 !important; 
+  border: 1px solid #d1d5db !important; 
+  background: transparent !important;
+}
+
+html.light .modal-btn-cancel:hover,
+body.light .modal-btn-cancel:hover {
+  background: #e2e4e9 !important;
+}
+
+/* ── Boutons ── */
+html.light .btn-primary,
+html.light .submit-btn,
+body.light .btn-primary,
+body.light .submit-btn {
+  background: linear-gradient(135deg, #d92534, #b91c2c) !important;
+  box-shadow: 0 4px 14px rgba(217, 37, 52, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html.light .btn-primary:hover,
+html.light .submit-btn:hover,
+body.light .btn-primary:hover,
+body.light .submit-btn:hover {
+  box-shadow: 0 6px 20px rgba(217, 37, 52, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+html.light .btn-secondary,
+body.light .btn-secondary {
+  background: transparent !important;
+  border: 1px solid #d1d5db !important;
+  color: #1a1d23 !important;
+}
+
+html.light .btn-secondary:hover,
+body.light .btn-secondary:hover {
+  background: #e2e4e9 !important;
+  border-color: #d92534 !important;
+}
+
+/* ── Corbeille ── */
+html.light .file-row,
+body.light .file-row { 
+  background: rgba(247, 248, 250, 0.7) !important; 
+  border: 1px solid #e5e7eb !important;
+}
+
+html.light .file-row:hover,
+body.light .file-row:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+html.light .expired-tag,
+body.light .expired-tag { 
+  background: rgba(239, 68, 68, 0.12) !important; 
+  color: #ef4444 !important; 
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+html.light .btn-restore,
+body.light .btn-restore { 
+  background: rgba(16, 185, 129, 0.12) !important; 
+  color: #0d7a4f !important; 
+  border: 1px solid rgba(16, 185, 129, 0.3) !important; 
+}
+
+html.light .btn-restore:hover,
+body.light .btn-restore:hover {
+  background: rgba(16, 185, 129, 0.2) !important;
+}
+
+html.light .btn-delete,
+body.light .btn-delete { 
+  background: rgba(239, 68, 68, 0.12) !important; 
+  color: #ef4444 !important; 
+  border: 1px solid rgba(239, 68, 68, 0.3) !important; 
+}
+
+html.light .btn-delete:hover,
+body.light .btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* ── Sessions ── */
+html.light .session-row,
+body.light .session-row { 
+  background: rgba(247, 248, 250, 0.7) !important; 
+  border: 1px solid #e5e7eb !important;
+}
+
+html.light .session-current,
+body.light .session-current { 
+  background: rgba(217, 37, 52, 0.05) !important; 
+  border: 1px solid rgba(217, 37, 52, 0.2) !important; 
+}
+
+html.light .badge,
+body.light .badge { 
+  background: rgba(217, 37, 52, 0.12) !important; 
+  color: #d92534 !important; 
+  border: 1px solid rgba(217, 37, 52, 0.2) !important;
+}
+
+html.light .revoke-btn,
+body.light .revoke-btn { 
+  background: rgba(239, 68, 68, 0.08) !important; 
+  color: #ef4444 !important; 
+  border: 1px solid rgba(239, 68, 68, 0.2) !important; 
+}
+
+/* ── Plans / Abonnement ── */
+html.light .plan-card,
+body.light .plan-card {
+  background: rgba(247, 248, 250, 0.8) !important;
+  border: 1px solid #d1d5db !important;
+}
+
+html.light .plan-card:hover,
+body.light .plan-card:hover {
+  border-color: #d92534 !important;
+  box-shadow: 0 8px 16px rgba(217, 37, 52, 0.12) !important;
+  transform: translateY(-4px) !important;
+}
+
+html.light .plan-card.current,
+body.light .plan-card.current { 
+  border: 2px solid #d92534 !important; 
+}
+
+html.light .toggle-wrapper,
+body.light .toggle-wrapper { 
+  background: rgba(255, 255, 255, 0.9) !important; 
+  border: 1px solid #d1d5db !important; 
+}
+
+html.light .toggle-option,
+body.light .toggle-option { 
+  color: #4a5568 !important; 
+}
+
+html.light .toggle-option.active,
+body.light .toggle-option.active {
+  background: #d92534 !important;
+  color: #ffffff !important;
+}
+
+html.light .badge-current,
+body.light .badge-current {
+  background: rgba(217, 37, 52, 0.1) !important;
+  border: 1px solid rgba(217, 37, 52, 0.2) !important;
+  color: #d92534 !important;
+}
+
+html.light .feature-item,
+body.light .feature-item { 
+  color: #1a1d23 !important; 
+}
+
+html.light .feature-check,
+body.light .feature-check { 
+  color: #d92534 !important; 
+}
+
+html.light .price-final,
+body.light .price-final { 
+  color: #1a1d23 !important; 
+  text-shadow: none !important; 
+}
+
+html.light .price-final .currency,
+html.light .price-period,
+html.light .price-strikethrough,
+body.light .price-final .currency,
+body.light .price-period,
+body.light .price-strikethrough { 
+  color: #4a5568 !important; 
+}
+
+html.light .price-savings,
+body.light .price-savings { 
+  color: #10b981 !important; 
+}
+
+/* ── Badges status ── */
+html.light .badge-plan.free,
+body.light .badge-plan.free { 
+  background: rgba(139, 149, 165, 0.15) !important; 
+  color: #4a5568 !important; 
+}
+
+html.light .badge-plan.starter,
+body.light .badge-plan.starter { 
+  background: rgba(59, 130, 246, 0.15) !important; 
+  color: #1e40af !important;
+}
+
+html.light .badge-plan.pro,
+body.light .badge-plan.pro { 
+  background: rgba(217, 37, 52, 0.15) !important; 
+  color: #d92534 !important;
+}
+
+html.light .badge-plan.premium,
+body.light .badge-plan.premium { 
+  background: rgba(245, 158, 11, 0.15) !important; 
+  color: #92400e !important;
+}
+
+html.light .badge-status.actif,
+html.light .badge-status.active,
+html.light .badge-status.success,
+body.light .badge-status.actif,
+body.light .badge-status.active,
+body.light .badge-status.success { 
+  background: rgba(16, 185, 129, 0.15) !important; 
+  color: #0d7a4f !important; 
+}
+
+html.light .badge-status.suspendu,
+html.light .badge-status.suspended,
+html.light .badge-status.failed,
+body.light .badge-status.suspendu,
+body.light .badge-status.suspended,
+body.light .badge-status.failed { 
+  background: rgba(239, 68, 68, 0.15) !important; 
+  color: #ef4444 !important;
+}
+
+html.light .badge-status.pending,
+body.light .badge-status.pending { 
+  background: rgba(245, 158, 11, 0.15) !important; 
+  color: #92400e !important; 
+}
+
+/* ── Theme Toggle Button ── */
+html.light .theme-toggle,
+body.light .theme-toggle { 
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #d1d5db !important;
+  color: #4a5568 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .theme-toggle:hover,
+body.light .theme-toggle:hover { 
+  background: rgba(255, 255, 255, 1) !important; 
+  color: #1a1d23 !important; 
+  border-color: #d92534 !important;
+  box-shadow: 0 4px 8px rgba(217, 37, 52, 0.15) !important;
+}
+
+html.light .lang-btn,
+body.light .lang-btn {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #d1d5db !important;
+  color: #4a5568 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .lang-btn:hover,
+body.light .lang-btn:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  color: #1a1d23 !important;
+  border-color: #d92534 !important;
+  box-shadow: 0 4px 8px rgba(217, 37, 52, 0.15) !important;
+}
+
+html.light .toggle-track,
+body.light .toggle-track { 
+  background: rgba(209, 213, 219, 0.5) !important; 
+  border: 1px solid #d1d5db !important; 
+}
+
+html.light .toggle-thumb,
+body.light .toggle-thumb { 
+  background: #d92534 !important; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ── Activité ── */
+html.light .activity-dot,
+body.light .activity-dot { 
+  background: #d92534 !important;
+  box-shadow: 0 0 6px rgba(217, 37, 52, 0.4) !important; 
+}
+
+html.light .activity-item,
+body.light .activity-item { 
+  background: rgba(247, 248, 250, 0.6) !important; 
+  border: 1px solid #e5e7eb !important;
+}
+
+html.light .activity-action,
+body.light .activity-action { 
+  color: #1a1d23 !important; 
+}
+
+html.light .activity-file,
+html.light .activity-time,
+body.light .activity-file,
+body.light .activity-time { 
+  color: #4a5568 !important; 
+}
+
+html.light .activity-action-tag,
+body.light .activity-action-tag { 
+  background: rgba(209, 213, 219, 0.3) !important; 
+  color: #4a5568 !important; 
+}
+
+/* ── Guardian 3D (login/signup) ── */
+html.light .guardian-caption h1,
+html.light .guardian-caption h2,
+body.light .guardian-caption h1,
+body.light .guardian-caption h2 { 
+  color: #1a1d23 !important; 
+}
+
+html.light .guardian-caption p,
+body.light .guardian-caption p { 
+  color: #4a5568 !important; 
+}
+
+html.light .head-face,
+html.light .torso-face,
+body.light .head-face,
+body.light .torso-face {
+  background: linear-gradient(160deg, #f5f5f5, #e0e0e0 75%) !important;
+  border-color: #d1d5db !important;
+  filter: none !important;
+}
+
+html.light .torso-face.right,
+html.light .torso-face.left,
+html.light .head-face.right,
+html.light .head-face.left,
+body.light .torso-face.right,
+body.light .torso-face.left,
+body.light .head-face.right,
+body.light .head-face.left { 
+  background: #d0d0d0 !important; 
+}
+
+html.light .head-face.top,
+body.light .head-face.top { 
+  background: #e5e5e5 !important; 
+}
+
+html.light .visor,
+body.light .visor {
+  background: linear-gradient(90deg, #c0c0c0, #e0e0e0, #c0c0c0) !important;
+  border: 2px solid rgba(217, 37, 52, 0.3) !important;
+  box-shadow: 0 0 10px rgba(217, 37, 52, 0.15) inset !important;
+}
+
+html.light .eye,
+body.light .eye {
+  background: #d92534 !important;
+  box-shadow: 0 0 10px 3px rgba(217, 37, 52, 0.6) !important;
+}
+
+html.light .torso-line,
+body.light .torso-line {
+  background: linear-gradient(180deg, transparent, rgba(217, 37, 52, 0.3), transparent) !important;
+}
+
+html.light .guardian-shadow,
+body.light .guardian-shadow {
+  background: radial-gradient(ellipse at center, rgba(217, 37, 52, 0.12), transparent 70%) !important;
+}
+
+/* ── Admin panels ── */
+html.light .revenue-banner,
+body.light .revenue-banner {
+  background: linear-gradient(135deg, rgba(217, 37, 52, 0.05), rgba(247, 248, 250, 0.9)) !important;
+  border: 1px solid rgba(217, 37, 52, 0.15) !important;
+}
+
+html.light .revenue-value,
+body.light .revenue-value { 
+  color: #d92534 !important; 
+  text-shadow: none !important; 
+}
+
+html.light .toolbar,
+body.light .toolbar {
+  background: rgba(247, 248, 250, 0.9) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* ── Dividers ── */
+html.light .stat-divider,
+html.light .account-info .info-row,
+body.light .stat-divider,
+body.light .account-info .info-row { 
+  border-color: #e5e7eb !important; 
+}
+
+/* ── Partage / Share ── */
+html.light .share-result,
+body.light .share-result { 
+  background: rgba(16, 185, 129, 0.08) !important; 
+  border: 1px solid rgba(16, 185, 129, 0.25) !important; 
+}
+
+html.light .share-result .share-url,
+body.light .share-result .share-url { 
+  color: #0d7a4f !important; 
+}
+
+html.light .share-result .copy-btn,
+body.light .share-result .copy-btn { 
+  color: #0d7a4f !important; 
+  border-color: rgba(16, 185, 129, 0.3) !important; 
+}
+
+html.light .promo-feedback.ok,
+body.light .promo-feedback.ok { 
+  color: #10b981 !important; 
+}
+
+html.light .promo-feedback.err,
+body.light .promo-feedback.err { 
+  color: #ef4444 !important; 
+}
+
+html.light .savings,
+body.light .savings { 
+  color: #10b981 !important; 
+}
+
+html.light .expiry,
+body.light .expiry { 
+  background: rgba(217, 37, 52, 0.06) !important; 
+  border: 1px solid rgba(217, 37, 52, 0.15) !important; 
+}
+
+html.light .expiry span,
+body.light .expiry span { 
+  color: #d92534 !important; 
+}
+
+html.light .powered,
+body.light .powered { 
+  color: #4a5568 !important; 
+}
+
+html.light .error-title,
+body.light .error-title { 
+  color: #ef4444 !important; 
+}
+
+html.light .error-msg,
+body.light .error-msg { 
+  color: #4a5568 !important; 
+}
+
+/* ── Admin promos ── */
+html.light .badge-active,
+body.light .badge-active { 
+  background: rgba(16, 185, 129, 0.15) !important; 
+  color: #0d7a4f !important; 
+}
+
+html.light .badge-inactive,
+body.light .badge-inactive { 
+  background: rgba(139, 149, 165, 0.15) !important; 
+  color: #8b95a5 !important; 
+}
+
+html.light .badge-expired,
+body.light .badge-expired { 
+  background: rgba(239, 68, 68, 0.15) !important; 
+  color: #ef4444 !important; 
+}
+
+html.light .btn-toggle-on,
+body.light .btn-toggle-on { 
+  background: rgba(245, 158, 11, 0.15) !important; 
+  color: #92400e !important; 
+  border: 1px solid rgba(245, 158, 11, 0.25) !important; 
+}
+
+html.light .btn-toggle-off,
+body.light .btn-toggle-off { 
+  background: rgba(16, 185, 129, 0.15) !important; 
+  color: #0d7a4f !important; 
+  border: 1px solid rgba(16, 185, 129, 0.25) !important; 
+}
+
+html.light .btn-del,
+body.light .btn-del { 
+  background: rgba(239, 68, 68, 0.08) !important; 
+  color: #ef4444 !important; 
+  border: 1px solid rgba(239, 68, 68, 0.2) !important; 
+}
+
+/* ── User Menu Dropdown ── */
+html.light .user-menu-dropdown,
+body.light .user-menu-dropdown {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(217, 37, 52, 0.05) !important;
+}
+
+html.light .user-menu-header,
+body.light .user-menu-header {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+html.light .user-menu-email,
+body.light .user-menu-email {
+  color: #8b95a5 !important;
+}
+
+html.light .user-menu-item,
+body.light .user-menu-item {
+  color: #1a1d23 !important;
+}
+
+html.light .user-menu-item:hover,
+body.light .user-menu-item:hover {
+  background: #f3f4f6 !important;
+}
+
+html.light .user-menu-item.danger,
+body.light .user-menu-item.danger {
+  color: #ef4444 !important;
+}
+
+html.light .user-menu-item.danger:hover,
+body.light .user-menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+html.light .user-menu-divider,
+body.light .user-menu-divider {
+  background: #e5e7eb !important;
+}
+
+html.light .user-menu:hover,
+body.light .user-menu:hover {
+  background: rgba(217, 37, 52, 0.05) !important;
+}
+
+/* ── Transitions fluides au toggle (300ms) ── */
+html, body, .backdrop {
+  transition: background-color 0.3s ease, color 0.3s ease !important;
+}
+
+/* Désactiver transitions pour certains éléments animés */
+.floor,
+.ember-particle,
+.progress-fill,
+canvas {
+  transition: none !important;
+}

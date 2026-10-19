@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember:#7a0f16;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);display:flex;align-items:center;justify-content:center;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:38px 36px 32px;backdrop-filter:blur(22px);width:480px;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  h2{font-family:'Orbitron',sans-serif;font-size:20px;margin-bottom:6px;}
+  .sub{font-size:13px;color:var(--ash);margin-bottom:20px;}
+  .recap{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+  .recap-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;}
+  .recap-row .label{color:var(--ash);}
+  .recap-row .value{color:var(--bone);font-weight:600;}
+  .recap-total{border-top:1px solid rgba(255,255,255,0.08);margin-top:8px;padding-top:10px;font-size:18px;font-weight:700;color:var(--ember-glow);}
+  .savings{font-size:11px;color:#2ecc71;margin-top:4px;}
+  .flash{padding:11px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;}
+  .flash.error{background:rgba(200,30,44,0.14);color:#ff9ba0;border:1px solid rgba(255,80,90,0.4);}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ash);margin-bottom:7px;}
+  .field input{width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:13px 14px;color:var(--bone);font-size:14px;outline:none;}
+  .field input:focus{border-color:var(--ember-hot);}
+  .radio-group{display:flex;gap:16px;margin-bottom:16px;}
+  .radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;}
+  .radio-group input[type="radio"]{accent-color:var(--ember-glow);}
+  .submit-btn{width:100%;padding:14px 16px;border:none;border-radius:11px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:13.5px;text-transform:uppercase;color:#160305;background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot)60%,#5a0a10);cursor:pointer;}
+  .submit-btn:hover{transform:translateY(-2px);}
+  .back-link{text-align:center;margin-top:16px;font-size:13px;}
+  .back-link a{color:var(--ember-glow);text-decoration:none;}
+  .promo-row{display:flex;gap:8px;margin-bottom:4px;}
+  .promo-input{flex:1;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:11px 14px;color:var(--bone);font-size:13px;font-family:'Inter',sans-serif;outline:none;text-transform:uppercase;letter-spacing:0.08em;}
+  .promo-input:focus{border-color:var(--ember-hot);}
+  .promo-btn{padding:11px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:var(--bone);font-size:12px;cursor:pointer;white-space:nowrap;transition:background 0.2s;}
+  .promo-btn:hover{background:rgba(255,255,255,0.06);}
+  .promo-feedback{font-size:12px;margin-bottom:14px;min-height:16px;}
+  .promo-feedback.ok{color:#2ecc71;}
+  .promo-feedback.err{color:#ff5a64;}
+  .recap-discount{display:none;border-top:1px solid rgba(255,255,255,0.08);margin-top:8px;padding-top:8px;}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
+  <h2>Souscrire — {{ plan.name }}</h2>
+  <p class="sub">{{ plan.description }}</p>
+
+  <div class="recap">
+    <div class="recap-row"><span class="label">Formule</span><span class="value">{{ plan.name }}</span></div>
+    <div class="recap-row"><span class="label">Stockage</span><span class="value">{{ quota_display }}</span></div>
+    <div class="recap-row"><span class="label">Cycle</span><span class="value">{% if billing_cycle == 'yearly' %}Annuel{% else %}Mensuel{% endif %}</span></div>
+    <div class="recap-total" id="totalDisplay">{{ amount }} FCFA</div>
+    <div class="recap-discount" id="recapDiscount">
+      <div class="recap-row"><span class="label">Réduction promo</span><span class="value" id="discountText" style="color:#2ecc71;"></span></div>
+      <div class="recap-row"><span class="label">Total après réduction</span><span class="value" id="finalPrice" style="color:var(--ember-glow);font-size:18px;"></span></div>
+    </div>
+    {% if billing_cycle == 'yearly' %}
+    <div class="savings">2 mois offerts — économisez {{ plan.display_price_monthly * 2 }} FCFA</div>
+    {% endif %}
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+          {% include 'partials/csrf_token.html' %}
+<input type="hidden" name="billing_cycle" value="{{ billing_cycle }}">
+    <input type="hidden" name="promo_code" id="promoCodeHidden">
+    <div class="field">
+      <label>Code promo (optionnel)</label>
+      <div class="promo-row">
+        <input type="text" id="promoInput" class="promo-input" placeholder="EX: VAULT20" autocomplete="off" maxlength="30">
+        <button type="button" class="promo-btn" onclick="applyPromo()">Appliquer</button>
+      </div>
+      <div class="promo-feedback" id="promoFeedback"></div>
+    </div>
+    <div class="field">
+      <label for="phone">{{ t('phone_number') }}</label>
+      <div style="display:flex; align-items:center; background:rgba(10,3,4,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
+        <span style="padding:13px 12px; color:var(--ash); font-size:14px; border-right:1px solid rgba(255,255,255,0.08); white-space:nowrap; flex-shrink:0;">+237</span>
+        <input type="tel" id="phone" name="phone" placeholder="6XXXXXXXX" required pattern="[0-9]{9}" style="border:none; border-radius:0; flex:1; background:transparent; padding:13px 14px; color:var(--bone); font-size:14px; outline:none;">
+      </div>
+      <span style="font-size:11px; color:var(--ash); margin-top:4px; display:block;"></span>
+    </div>
+    <div class="radio-group">
+      <label><input type="radio" name="operator" value="orange" required> Orange Money</label>
+      <label><input type="radio" name="operator" value="mtn" required> MTN Money</label>
+    </div>
+    <button type="submit" class="submit-btn" id="payBtn">Payer {{ amount }} FCFA</button>
+  </form>
+  <div class="back-link"><a href="/plans?billing={{ billing_cycle }}">← Retour aux abonnements</a></div>
+</div>
+<script>
+var baseAmount = {{ amount }};
+var planKey = '{{ plan_key }}';
+var discountApplied = 0;
+
+function applyPromo(){
+  var code = document.getElementById('promoInput').value.trim().toUpperCase();
+  var fb = document.getElementById('promoFeedback');
+  if(!code){ fb.textContent = ''; fb.className = 'promo-feedback'; return; }
+  fb.textContent = 'Vérification...';
+  fb.className = 'promo-feedback';
+  fetch('/api/check-promo', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code, plan: planKey})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.valid){
+      discountApplied = data.discount;
+      var finalAmt = Math.max(1, Math.round(baseAmount * (1 - discountApplied/100)));
+      fb.textContent = '✓ ' + data.message;
+      fb.className = 'promo-feedback ok';
+      document.getElementById('promoCodeHidden').value = code;
+      document.getElementById('recapDiscount').style.display = 'block';
+      document.getElementById('discountText').textContent = '-' + discountApplied + '%';
+      document.getElementById('finalPrice').textContent = finalAmt + ' FCFA';
+      document.getElementById('totalDisplay').style.textDecoration = 'line-through';
+      document.getElementById('totalDisplay').style.opacity = '0.5';
+      document.getElementById('payBtn').textContent = 'Payer ' + finalAmt + ' FCFA';
+    } else {
+      discountApplied = 0;
+      fb.textContent = '✕ ' + (data.message || 'Code invalide.');
+      fb.className = 'promo-feedback err';
+      document.getElementById('promoCodeHidden').value = '';
+      document.getElementById('recapDiscount').style.display = 'none';
+      document.getElementById('totalDisplay').style.textDecoration = '';
+      document.getElementById('totalDisplay').style.opacity = '1';
+      document.getElementById('payBtn').textContent = 'Payer ' + baseAmount + ' FCFA';
+    }
+  })
+  .catch(() => { fb.textContent = 'Erreur réseau.'; fb.className = 'promo-feedback err'; });
+}
+
+// Appliquer sur Enter dans le champ promo
+document.getElementById('promoInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); applyPromo(); }
+});
+
+document.getElementById('payBtn').closest('form').addEventListener('submit', function(){
+  var btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.textContent = '{{ t("initiating_payment") }}';
+  btn.style.opacity = '0.7';
+});
+</script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

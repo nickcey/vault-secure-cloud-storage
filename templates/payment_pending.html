@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+{% if lang == 'en' %}<script src="/i18n/en.js"></script>
+<script src="/static/js/vault-i18n.js"></script>{% endif %}
+
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+<meta name="theme-color" content="#0b0606">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember:#7a0f16;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);display:flex;align-items:center;justify-content:center;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:38px 36px 32px;backdrop-filter:blur(22px);width:460px;text-align:center;}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:26px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  h2{font-family:'Orbitron',sans-serif;font-size:20px;margin-bottom:6px;}
+  .sub{font-size:13px;color:var(--ash);margin-bottom:20px;}
+  .timer{font-family:'Orbitron',sans-serif;font-size:32px;color:var(--ember-glow);margin:16px 0;}
+  .spinner{border:4px solid rgba(255,255,255,0.1);border-top:4px solid var(--ember-glow);border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:20px auto;}
+  @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+  .btn{display:inline-block;padding:12px 24px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;margin:8px;}
+  .btn-check{background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot)60%,#5a0a10);color:#160305;border:none;}
+  .btn-cancel{background:transparent;color:var(--ash);border:1px solid var(--glass-edge);}
+  .flash{padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px;}
+  .flash.success{background:rgba(30,140,80,0.14);color:#8beeb4;border:1px solid rgba(60,200,120,0.35);}
+  .flash.error{background:rgba(200,30,44,0.14);color:#ff9ba0;border:1px solid rgba(255,80,90,0.4);}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
+  <h2>⏳ Paiement en cours</h2>
+  <p class="sub">Confirmez le paiement sur votre téléphone. Ne quittez pas cette page.</p>
+  <div class="spinner"></div>
+  <div class="timer" id="timer">5:00</div>
+  <p style="font-size:12px;color:var(--ash);">Vérification automatique en cours...</p>
+  <div id="message"></div>
+  <button class="btn btn-check" onclick="checkNow()">Vérifier maintenant</button>
+  <a href="/plans" class="btn btn-cancel">Annuler</a>
+</div>
+<script>
+var endTime = Math.floor(Date.now()/1000) + 300;
+var paymentId = {{ payment.id }};
+var checked = false;
+var timerInterval = null;
+var checkInterval = null;
+
+function updateTimer(){
+  var now = Math.floor(Date.now()/1000);
+  var remaining = endTime - now;
+  if(remaining <= 0){
+    document.getElementById('timer').textContent = 'Expiré';
+    stopAll();
+    return;
+  }
+  var m = Math.floor(remaining/60);
+  var s = remaining%60;
+  document.getElementById('timer').textContent = m + ':' + (s<10?'0':'') + s;
+}
+
+function stopAll(){
+  if(timerInterval) clearInterval(timerInterval);
+  if(checkInterval) clearInterval(checkInterval);
+  // Arrêter le spinner
+  var spinner = document.querySelector('.spinner');
+  if(spinner) spinner.style.display = 'none';
+  // Désactiver le bouton vérifier
+  var btnCheck = document.querySelector('.btn-check');
+  if(btnCheck){ btnCheck.disabled = true; btnCheck.style.opacity = '0.5'; btnCheck.style.cursor = 'not-allowed'; }
+}
+
+function checkNow(){
+  if(checked) return;
+  fetch('/payment-check/' + paymentId)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.status === 'success'){
+        checked = true;
+        stopAll();
+        document.getElementById('timer').textContent = '✓';
+        document.getElementById('timer').style.color = '#2ecc71';
+        document.getElementById('message').innerHTML = '<div class="flash success">Paiement confirmé ! Redirection...</div>';
+        setTimeout(function(){ window.location.replace('/dashboard'); }, 1500);
+      } else if(data.status === 'failed'){
+        checked = true;
+        stopAll();
+        document.getElementById('timer').textContent = '✗';
+        document.getElementById('timer').style.color = 'var(--ember-glow)';
+        document.getElementById('message').innerHTML = '<div class="flash error">Paiement échoué. <a href="/plans" style="color:#ff9ba0;">Réessayer</a></div>';
+      }
+    })
+    .catch(function(){
+      // erreur réseau, on réessaie au prochain interval
+    });
+}
+
+checkInterval = setInterval(function(){
+  if(!checked) checkNow();
+}, 5000);
+
+timerInterval = setInterval(updateTimer, 1000);
+updateTimer();
+
+// Attendre 7 secondes avant la première vérification
+setTimeout(function(){
+  if(!checked) checkNow();
+}, 7000);
+</script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

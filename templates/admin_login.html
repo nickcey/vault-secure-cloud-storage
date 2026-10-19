@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault Admin</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;color:var(--bone);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+  }
+  .card{
+    background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);
+    padding:44px 40px 36px;backdrop-filter:blur(22px) saturate(140%);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);width:420px;
+    animation:cardRise 0.6s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes cardRise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:30px;}
+  .brand-mark{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:17px;box-shadow:0 0 20px rgba(200,30,44,0.5);}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:15px;letter-spacing:0.14em;text-transform:uppercase;}
+  .brand-badge{font-size:10px;letter-spacing:0.25em;color:var(--ember-glow);text-transform:uppercase;font-family:'Orbitron',sans-serif;}
+  .divider{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  h2{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;text-align:center;margin-bottom:6px;}
+  .sub{font-size:12.5px;color:var(--ash);text-align:center;margin-bottom:26px;}
+  .flash{font-size:13px;padding:11px 14px;border-radius:10px;margin-bottom:14px;border:1px solid transparent;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .flash.success{background:rgba(30,140,80,0.14);border-color:rgba(60,200,120,0.35);color:#8beeb4;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ash);margin-bottom:7px;}
+  .field input{
+    width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;padding:13px 14px;color:var(--bone);font-size:14px;
+    font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+  }
+  .field input::placeholder{color:#5c4a4a;}
+  .field input:focus{border-color:var(--ember-hot);box-shadow:0 0 0 3px rgba(200,30,44,0.16);}
+  .submit-btn{
+    width:100%;margin-top:6px;padding:14px 16px;border:none;border-radius:11px;
+    font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;
+    letter-spacing:0.08em;text-transform:uppercase;color:#160305;
+    background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);
+    cursor:pointer;box-shadow:0 12px 26px -8px rgba(200,30,44,0.55);
+    transition:transform 0.15s ease;
+  }
+  .submit-btn:hover{transform:translateY(-2px);}
+  .back-link{text-align:center;margin-top:18px;font-size:12.5px;color:var(--ash);}
+  .back-link a{color:var(--ash);text-decoration:none;transition:color 0.2s;}
+  .back-link a:hover{color:var(--bone);}
+  .security-note{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(200,30,44,0.06);border:1px solid rgba(255,90,90,0.15);
+    border-radius:8px;padding:10px 12px;margin-bottom:20px;
+  }
+  .security-note p{font-size:11.5px;color:var(--ash);line-height:1.5;}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="divider">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="brand-mark">V</div>
+        <span class="brand-name">Vault</span>
+      </div>
+      <span class="brand-badge">Portail Administrateur</span>
+    </div>
+  </div>
+
+  <h2>Connexion sécurisée</h2>
+  <p class="sub">Accès réservé aux administrateurs système.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="security-note">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,90,90,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+      <path d="M8 11V7C8 4.8 9.8 3 12 3C14.2 3 16 4.8 16 7V11"></path>
+    </svg>
+    <p>Cette interface est réservée aux administrateurs. Les accès sont enregistrés.</p>
+  </div>
+
+  <form method="POST" id="adminLoginForm">
+          {% include 'partials/csrf_token.html' %}
+<div class="field">
+      <label for="email">Adresse email</label>
+      <input type="email" id="email" name="email" placeholder="admin@vault.com" required autofocus>
+    </div>
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" name="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="submit-btn" id="loginBtn">Accéder au panneau</button>
+  </form>
+
+  <div class="back-link">
+    <a href="/login">← Retour à l'espace utilisateur</a>
+    &nbsp;·&nbsp;
+    <button onclick="toggleTheme()" style="background:none;border:none;color:var(--ash);font-size:12px;cursor:pointer;"><span class="theme-icon">☀️</span></button>
+  </div>
+</div>
+
+<div id="adminMsg" class="flash" style="display:none;margin-top:12px;"></div>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-admin-login.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

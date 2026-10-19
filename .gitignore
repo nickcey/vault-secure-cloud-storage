@@ -1,0 +1,128 @@
+# ═══════════════════════════════════════════════════════════
+# VAULT SECURE CLOUD STORAGE - .gitignore
+# ═══════════════════════════════════════════════════════════
+
+# ──────────────────────────────────────────────────────────
+# 🔒 SECRETS ET FICHIERS SENSIBLES (NE JAMAIS COMMITTER !)
+# ──────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Clés et certificats
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Bases de données avec données réelles
+*.db
+*.sqlite
+*.sqlite3
+database/cloud.db
+
+# ──────────────────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# ──────────────────────────────────────────────────────────
+# IDEs et Éditeurs
+# ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ──────────────────────────────────────────────────────────
+# Logs et données temporaires
+# ──────────────────────────────────────────────────────────
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ──────────────────────────────────────────────────────────
+# Flask
+# ──────────────────────────────────────────────────────────
+instance/
+.webassets-cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ──────────────────────────────────────────────────────────
+# Fichiers uploadés (trop volumineux pour Git)
+# ──────────────────────────────────────────────────────────
+static/uploads/*.enc
+!static/uploads/.gitkeep
+
+# ──────────────────────────────────────────────────────────
+# Exports et backups
+# ──────────────────────────────────────────────────────────
+database/export_data.json
+*.backup
+*.bak
+*.old
+backups/
+*.tar.gz
+
+# ──────────────────────────────────────────────────────────
+# OS
+# ──────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+cloudflared-windows-amd64.exe
+
+# ──────────────────────────────────────────────────────────
+# Ajouts : copies du .env, fichiers chiffrés, sauvegardes
+# ──────────────────────────────────────────────────────────
+.env.*
+!.env.example
+storage/
+database/backups/
+.freebuff/
+venv*/
+*.tar.gz

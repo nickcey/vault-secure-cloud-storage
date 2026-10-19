@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;position:relative;}
+  .backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;}
+  .floor{position:absolute;left:0;right:0;bottom:-10%;height:55%;background-image:linear-gradient(rgba(200,40,50,0.12) 1px,transparent 1px),linear-gradient(90deg,rgba(200,40,50,0.12) 1px,transparent 1px);background-size:46px 46px;transform:perspective(500px) rotateX(72deg);-webkit-mask-image:linear-gradient(180deg,transparent,black 30%,black);mask-image:linear-gradient(180deg,transparent,black 30%,black);opacity:0.45;animation:floorScroll 6s linear infinite;}
+  @keyframes floorScroll{from{background-position:0 0,0 0;}to{background-position:0 46px,46px 0;}}
+  .navbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 32px;background:rgba(10,4,5,0.55);border-bottom:1px solid var(--glass-edge);backdrop-filter:blur(20px);}
+  .nav-brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  .nav-user{display:flex;align-items:center;gap:12px;}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid rgba(255,90,90,0.35);border-radius:8px;color:var(--bone);font-size:12.5px;text-decoration:none;background:transparent;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(200,30,44,0.16);}
+  .main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:36px 32px 70px;}
+  .page-header{margin-bottom:24px;}
+  .page-header h1{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .page-header p{font-size:13px;color:var(--ash);margin-top:5px;}
+  .filter-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-select{padding:9px 13px;background:rgba(10,3,4,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:var(--bone);font-size:13px;outline:none;}
+  .filter-select:focus{border-color:var(--ember-hot);}
+  .btn-filter{padding:9px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot));color:#160305;font-weight:700;font-size:12px;cursor:pointer;}
+  .btn-reset{padding:9px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:var(--ash);font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
+  .count{font-size:13px;color:var(--ash);margin-bottom:14px;}
+  .count strong{color:var(--bone);}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:0;backdrop-filter:blur(22px);overflow:hidden;}
+  .activity-item{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;}
+  .activity-item:last-child{border-bottom:none;}
+  .activity-item:hover{background:rgba(255,255,255,0.02);}
+  .activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .dot-upload{background:#4d9de0;box-shadow:0 0 6px rgba(77,157,224,0.5);}
+  .dot-download{background:#2ecc71;box-shadow:0 0 6px rgba(46,204,113,0.5);}
+  .dot-delete{background:#ff5a64;box-shadow:0 0 6px rgba(255,90,100,0.5);}
+  .dot-login{background:#ffb43c;box-shadow:0 0 6px rgba(255,180,60,0.5);}
+  .dot-default{background:var(--ember-glow);box-shadow:0 0 6px rgba(255,59,68,0.4);}
+  .activity-info{flex:1;min-width:0;}
+  .activity-action{font-size:13px;font-weight:500;color:var(--bone);}
+  .activity-file{font-size:11.5px;color:var(--ash);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .activity-time{font-size:12px;color:var(--ash);white-space:nowrap;flex-shrink:0;}
+  .empty-state{text-align:center;padding:50px;color:var(--ash);}
+  .empty-state p{font-size:15px;color:var(--bone);margin-bottom:6px;}
+  @media(max-width:500px){.main{padding:24px 16px 50px;}.navbar{padding:14px 18px;}}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/dropdown-futuristic.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="backdrop"><div class="floor"></div></div>
+
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="brand-mark">V</div>
+    <span class="brand-name">Vault</span>
+  </div>
+  <div class="nav-user">
+    <a href="/dashboard" class="back-btn">← Dashboard</a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1>{{ t('my_activity') }}</h1>
+    <p>{{ t('all_actions_history') }}</p>
+  </div>
+
+  <form method="GET" action="/activity">
+    <div class="filter-row">
+      <select name="action" class="filter-select">
+        <option value="">{{ t('all_actions') }}</option>
+        <option value="Connexion" {% if action_filter=='Connexion' %}selected{% endif %}>{{ t('connection') }}</option>
+        <option value="Upload" {% if action_filter=='Upload' %}selected{% endif %}>{{ t('upload_action') }}</option>
+        <option value="Téléchargement" {% if action_filter=='Téléchargement' %}selected{% endif %}>{{ t('download_action') }}</option>
+        <option value="Suppression" {% if action_filter=='Suppression' %}selected{% endif %}>{{ t('deletion') }}</option>
+        <option value="Restauration" {% if action_filter=='Restauration' %}selected{% endif %}>{{ t('restoration') }}</option>
+        <option value="Renommage" {% if action_filter=='Renommage' %}selected{% endif %}>{{ t('renaming') }}</option>
+        <option value="Inscription" {% if action_filter=='Inscription' %}selected{% endif %}>{{ t('registration') }}</option>
+      </select>
+      <button type="submit" class="btn-filter">{{ t('filter') }}</button>
+      <a href="/activity" class="btn-reset">{{ t('reset') }}</a>
+    </div>
+  </form>
+
+  <div class="count"><strong>{{ logs|length }}</strong> entrée(s)</div>
+
+  <div class="card">
+    {% if logs %}
+      {% for log in logs %}
+      <div class="activity-item">
+        {% if 'Upload' in log.action %}<div class="activity-dot dot-upload"></div>
+        {% elif 'Téléchargement' in log.action %}<div class="activity-dot dot-download"></div>
+        {% elif 'Suppression' in log.action %}<div class="activity-dot dot-delete"></div>
+        {% elif 'Connexion' in log.action %}<div class="activity-dot dot-login"></div>
+        {% else %}<div class="activity-dot dot-default"></div>{% endif %}
+        <div class="activity-info">
+          <div class="activity-action">{{ log.action }}</div>
+          {% if log.filename %}<div class="activity-file">{{ log.filename }}</div>{% endif %}
+        </div>
+        <div class="activity-time">{{ log.timestamp.strftime('%d/%m/%Y %H:%M') if log.timestamp else '—' }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p>{{ t('no_activity') }}</p>
+        <span>{{ t('your_actions_appear_here') }}</span>
+      </div>
+    {% endif %}
+  </div>
+</main>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

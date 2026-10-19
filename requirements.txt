@@ -1,0 +1,21 @@
+# Vault — dépendances (Python 3.10 ou 3.11 : umbral-pre n'existe pas pour les versions suivantes)
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Limiter==3.5.0
+Flask-Mail==0.9.1
+Flask-WTF==1.2.1
+WTForms==3.1.1
+SQLAlchemy==2.0.51
+Werkzeug==3.1.8
+bcrypt==4.0.1
+cryptography==41.0.7
+argon2-cffi==25.1.0
+pycryptodome==3.23.0
+python-dotenv==1.0.0
+mnemonic==0.20
+pyotp==2.9.0
+qrcode==8.2
+requests==2.31.0
+waitress==3.0.2
+umbral-pre==0.10.0

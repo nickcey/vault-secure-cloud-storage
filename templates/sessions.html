@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;padding:30px;}
+  .container{max-width:800px;margin:0 auto;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:28px;backdrop-filter:blur(22px);margin-bottom:20px;}
+  h2{font-family:'Orbitron',sans-serif;font-size:20px;margin-bottom:18px;}
+  .session-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.02);border-radius:10px;margin-bottom:8px;flex-wrap:wrap;gap:10px;}
+  .session-current{border:1px solid rgba(255,90,90,0.3);background:rgba(200,30,44,0.08);}
+  .session-info{flex:1;min-width:200px;}
+  .session-info .ip{font-size:14px;color:var(--bone);}
+  .session-info .agent{font-size:11px;color:var(--ash);margin-top:3px;}
+  .session-info .dates{font-size:10px;color:var(--ash);margin-top:2px;}
+  .badge{display:inline-block;background:rgba(200,30,44,0.2);color:var(--ember-glow);padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;margin-left:8px;}
+  .revoke-btn{background:rgba(200,30,44,0.15);border:1px solid rgba(255,90,90,0.3);color:var(--ember-glow);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;}
+  .revoke-btn:hover{background:rgba(200,30,44,0.3);}
+  .back-link{color:var(--ember-glow);text-decoration:none;font-size:13px;}
+  .back-link:hover{color:#fff;}
+  .flash{padding:11px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;}
+  .flash.success{background:rgba(30,140,80,0.14);color:#8beeb4;border:1px solid rgba(60,200,120,0.35);}
+  .flash.error{background:rgba(200,30,44,0.14);color:#ff9ba0;border:1px solid rgba(255,80,90,0.4);}
+  .flash.info{background:rgba(90,110,220,0.12);color:#b7c2ff;border:1px solid rgba(120,140,255,0.35);}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="container">
+  <h2>🔐 {{ t('active_sessions') }}</h2>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <div class="card">
+    {% for s in sessions %}
+    <div class="session-row {% if s.session_token == current_token %}session-current{% endif %}">
+      <div class="session-info">
+        <span class="ip">{{ s.ip_address or t('unknown_ip') }}{% if s.session_token == current_token %}<span class="badge">{{ t('current') }}</span>{% endif %}</span>
+        <div class="agent">{{ s.user_agent or t('unknown_browser') }}</div>
+        <div class="dates">{{ t('created_on_time') }} {{ s.created_at.strftime('%d/%m/%Y à %H:%M') }} · {{ t('last_activity') }} : {{ s.last_seen.strftime('%d/%m/%Y à %H:%M') }}</div>
+      </div>
+      <form method="POST" action="/revoke-session/{{ s.id }}">
+              {% include 'partials/csrf_token.html' %}
+<button type="submit" class="revoke-btn" data-busy-text="{{ t('revoke') }}...">{{ t('revoke') }}</button>
+      </form>
+    </div>
+    {% endfor %}
+    {% if not sessions %}
+    <p style="color:var(--ash);font-size:13px;">{{ t('no_sessions') }}</p>
+    {% endif %}
+  </div>
+  <a href="/dashboard" class="back-link">{{ t('back_to_dashboard') }}</a>
+</div>
+<script nonce="{{ csp_nonce }}">
+document.querySelectorAll('.revoke-btn').forEach(function(b){
+  b.form.addEventListener('submit', function(){ b.disabled = true; b.textContent = b.getAttribute('data-busy-text'); });
+});
+</script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

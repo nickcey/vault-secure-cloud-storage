@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<link rel="stylesheet" href="/static/loader.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --void:        #070404;
+    --void-deep:   #030101;
+    --ember:       #7a0f16;
+    --ember-hot:   #c81e2c;
+    --ember-glow:  #ff3b44;
+    --bone:        #f3e6e4;
+    --ash:         #9a7f7e;
+    --glass:       rgba(35, 12, 14, 0.35);
+    --glass-edge:  rgba(255, 90, 90, 0.16);
+    --radius:      18px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{ height:100%; }
+
+  body{
+    font-family:'Inter', sans-serif;
+    color: var(--bone);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .backdrop{
+    position:fixed; inset:0; z-index:0; overflow:hidden;
+  }
+
+  .floor{
+    position:absolute; left:0; right:0; bottom:-10%;
+    height:60%;
+    background-image:
+      linear-gradient(rgba(200,40,50,0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,40,50,0.14) 1px, transparent 1px);
+    background-size: 46px 46px;
+    transform: perspective(500px) rotateX(72deg);
+    -webkit-mask-image: linear-gradient(180deg, transparent, black 30%, black);
+            mask-image: linear-gradient(180deg, transparent, black 30%, black);
+    opacity:0.55;
+    animation: floorScroll 6s linear infinite;
+  }
+  @keyframes floorScroll{
+    from{ background-position: 0 0, 0 0; }
+    to{ background-position: 0 46px, 46px 0; }
+  }
+
+  .ember-particle{
+    position:absolute; bottom:-5%;
+    width:3px; height:3px; border-radius:50%;
+    background: var(--ember-glow);
+    box-shadow:0 0 8px 2px var(--ember-glow);
+    opacity:0.7;
+    animation: rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.8; }
+    100%{ transform:translateY(-115vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    width:100%; max-width:1080px;
+    display:grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    align-items:center;
+    gap:20px;
+    padding:32px;
+  }
+
+  .guardian-column{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+  }
+
+  .guardian-caption .eyebrow{
+    font-family:'Orbitron', sans-serif;
+    font-size:11px; letter-spacing:0.32em; text-transform:uppercase;
+    color: var(--ember-glow);
+    opacity:0.85;
+    display:block; margin-bottom:10px;
+    text-align:center;
+  }
+  .guardian-caption h1{
+    font-family:'Orbitron', sans-serif;
+    font-size:22px; font-weight:700;
+    line-height:1.35;
+    color: var(--bone);
+    text-align:center;
+  }
+  .guardian-caption p{
+    margin-top:10px;
+    font-size:13.5px; color: var(--ash); line-height:1.6;
+    text-align:center;
+  }
+
+  .guardian-scene{
+    width:260px; height:300px;
+    perspective: 900px;
+    position:relative;
+  }
+
+  .guardian{
+    position:absolute; inset:0;
+    transform-style:preserve-3d;
+    animation: bob 4.5s ease-in-out infinite;
+  }
+  @keyframes bob{
+    0%,100%{ transform: translateY(0px); }
+    50%{ transform: translateY(-14px); }
+  }
+
+  .guardian-inner{
+    position:absolute; inset:0;
+    transform-style:preserve-3d;
+    transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg));
+    transition: transform 0.15s ease-out;
+  }
+
+  .ring{
+    position:absolute; left:50%; top:58%;
+    width:220px; height:220px;
+    margin:-110px 0 0 -110px;
+    border-radius:50%;
+    border:1px solid rgba(255,80,80,0.35);
+    transform: rotateX(78deg);
+    box-shadow: 0 0 24px rgba(200,30,44,0.25) inset;
+  }
+  .ring.ring2{
+    width:170px; height:170px; margin:-85px 0 0 -85px;
+    border-color: rgba(255,120,120,0.2);
+    animation: spin 9s linear infinite;
+    border-style:dashed;
+  }
+  .ring.ring1{ animation: spin 14s linear infinite reverse; }
+  @keyframes spin{ to{ transform: rotateX(78deg) rotateZ(360deg); } }
+
+  .core{
+    position:absolute; left:50%; top:70%;
+    width:14px; height:14px; margin:-7px 0 0 -7px;
+    border-radius:50%;
+    background: var(--ember-glow);
+    box-shadow: 0 0 20px 6px rgba(255,59,68,0.65);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:0.6; transform: translateZ(0) scale(1); }
+    50%{ opacity:1; transform: translateZ(0) scale(1.35); }
+  }
+
+  .torso{
+    position:absolute; left:50%; top:56%;
+    width:96px; height:70px; margin:-35px 0 0 -48px;
+    transform-style:preserve-3d;
+  }
+  .torso-face{
+    position:absolute; inset:0;
+    background: linear-gradient(160deg, #1c0708, #0a0202 70%);
+    border:1px solid var(--glass-edge);
+    clip-path: polygon(20% 0, 80% 0, 100% 30%, 82% 100%, 18% 100%, 0 30%);
+  }
+  .torso-face.front{ transform: translateZ(18px); }
+  .torso-face.back{ transform: translateZ(-18px) rotateY(180deg); }
+  .torso-face.right{ width:36px; left:calc(50% - 18px); transform: rotateY(90deg) translateZ(18px); background:#160506; }
+  .torso-face.left{ width:36px; left:calc(50% - 18px); transform: rotateY(-90deg) translateZ(18px); background:#0d0303; }
+  .torso-line{
+    position:absolute; left:50%; top:14%; bottom:14%; width:2px; margin-left:-1px;
+    background: linear-gradient(180deg, transparent, var(--ember-glow), transparent);
+    transform: translateZ(19px);
+    opacity:0.75;
+    animation: flicker 3s ease-in-out infinite;
+  }
+  @keyframes flicker{ 0%,100%{opacity:0.35;} 50%{opacity:0.9;} }
+
+  .head{
+    position:absolute; left:50%; top:18%;
+    width:78px; height:60px; margin:-30px 0 0 -39px;
+    transform-style:preserve-3d;
+  }
+  .head-face{
+    position:absolute; inset:0; border-radius:14px;
+    background: linear-gradient(160deg, #200709, #0a0203 75%);
+    border:1px solid var(--glass-edge);
+  }
+  .head-face.front{ transform: translateZ(18px); }
+  .head-face.back{ transform: translateZ(-18px) rotateY(180deg); }
+  .head-face.right{ width:36px; left:calc(50% - 18px); transform: rotateY(90deg) translateZ(18px); background:#170506; }
+  .head-face.left{ width:36px; left:calc(50% - 18px); transform: rotateY(-90deg) translateZ(18px); background:#0e0303; }
+  .head-face.top{ height:36px; top:calc(50% - 18px); transform: rotateX(90deg) translateZ(18px); background:#180506; }
+
+  .visor{
+    position:absolute; left:12%; right:12%; top:32%; height:24%;
+    transform: translateZ(19px);
+    background: linear-gradient(90deg, #1a0304, #2a0507, #1a0304);
+    border-radius:8px;
+    border:1px solid rgba(255,90,90,0.35);
+    box-shadow: 0 0 18px rgba(200,30,44,0.35) inset;
+    display:flex; align-items:center; justify-content:space-evenly;
+    overflow:hidden;
+  }
+  .eye{
+    width:9px; height:9px; border-radius:50%;
+    background: var(--ember-glow);
+    box-shadow: 0 0 10px 3px rgba(255,59,68,0.85);
+    transform: translate(var(--ex,0px), var(--ey,0px));
+    transition: transform 0.08s linear;
+  }
+
+  .guardian-shadow{
+    position:absolute; left:50%; bottom:6%;
+    width:130px; height:16px; margin-left:-65px;
+    background: radial-gradient(ellipse at center, rgba(200,30,44,0.45), transparent 70%);
+    filter: blur(2px);
+    animation: shadowPulse 4.5s ease-in-out infinite;
+  }
+  @keyframes shadowPulse{
+    0%,100%{ opacity:0.5; transform: scaleX(1); }
+    50%{ opacity:0.3; transform: scaleX(0.85); }
+  }
+
+  .auth-card{
+    position:relative;
+    background: var(--glass);
+    border:1px solid var(--glass-edge);
+    border-radius: var(--radius);
+    padding:38px 36px 32px;
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(255,60,68,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    animation: cardRise 0.7s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes cardRise{
+    from{ opacity:0; transform: translateY(24px) rotateX(6deg); }
+    to{ opacity:1; transform: translateY(0) rotateX(0deg); }
+  }
+  .auth-card::before{
+    content:"";
+    position:absolute; inset:-1px;
+    border-radius:inherit;
+    padding:1px;
+    background: linear-gradient(135deg, rgba(255,80,90,0.5), transparent 30%, transparent 70%, rgba(255,80,90,0.25));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events:none;
+  }
+
+  .brand{
+    display:flex; align-items:center; gap:10px; margin-bottom:26px;
+  }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background: linear-gradient(135deg, var(--ember-hot), #3a0409);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 0 16px rgba(200,30,44,0.5);
+    font-family:'Orbitron', sans-serif; font-weight:900; font-size:15px;
+  }
+  .brand-name{
+    font-family:'Orbitron', sans-serif; font-size:14px; letter-spacing:0.14em;
+    text-transform:uppercase; color: var(--bone);
+  }
+
+  .auth-card h2{
+    font-family:'Orbitron', sans-serif;
+    font-size:24px; font-weight:700;
+    margin-bottom:6px;
+  }
+  .auth-card .sub{
+    font-size:13px; color: var(--ash); margin-bottom:26px; line-height:1.55;
+  }
+
+  .flash{
+    font-size:13px;
+    padding:11px 14px;
+    border-radius:10px;
+    margin-bottom:14px;
+    border:1px solid transparent;
+    animation: flashIn 0.35s ease both;
+  }
+  @keyframes flashIn{
+    from{ opacity:0; transform: translateY(-6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .flash.success{ background: rgba(30, 140, 80, 0.14); border-color: rgba(60,200,120,0.35); color:#8beeb4; }
+  .flash.error{ background: rgba(200, 30, 44, 0.14); border-color: rgba(255,80,90,0.4); color:#ff9ba0; }
+  .flash.info{ background: rgba(90, 110, 220, 0.12); border-color: rgba(120,140,255,0.35); color:#b7c2ff; }
+
+  .field{ margin-bottom:18px; position:relative; }
+  .field label{
+    display:block; font-size:11.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color: var(--ash);
+    margin-bottom:7px;
+  }
+  .field input{
+    width:100%;
+    background: rgba(10,3,4,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:13px 14px;
+    color: var(--bone);
+    font-size:14px;
+    font-family:'Inter', sans-serif;
+    outline:none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .field input::placeholder{ color:#5c4a4a; }
+  .field input:focus{
+    border-color: var(--ember-hot);
+    background: rgba(15,4,5,0.75);
+    box-shadow: 0 0 0 3px rgba(200,30,44,0.16), 0 0 18px rgba(200,30,44,0.25);
+  }
+
+  .otp-field{ margin-bottom:10px; text-align:center; }
+  .otp-input{
+    width:100%;
+    background: rgba(10,3,4,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:16px 14px 16px 28px;
+    color: var(--bone);
+    font-family:'Orbitron', sans-serif;
+    font-size:26px;
+    font-weight:700;
+    text-align:center;
+    letter-spacing:14px;
+    outline:none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .otp-input::placeholder{ color:#4a3838; letter-spacing:14px; }
+  .otp-input:focus{
+    border-color: var(--ember-hot);
+    background: rgba(15,4,5,0.75);
+    box-shadow: 0 0 0 3px rgba(200,30,44,0.16), 0 0 22px rgba(200,30,44,0.3);
+  }
+  .otp-dots{
+    display:flex; justify-content:center; gap:10px;
+    margin-top:14px;
+  }
+  .otp-dots .dot{
+    width:8px; height:8px; border-radius:50%;
+    background: rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.16);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .otp-dots .dot.filled{
+    background: var(--ember-glow);
+    border-color: transparent;
+    box-shadow: 0 0 10px 3px rgba(255,59,68,0.65);
+    transform: scale(1.2);
+  }
+
+  .timer-container{
+    text-align:center;
+    margin-top:16px;
+    font-size:14px;
+    color: var(--ash);
+  }
+  .timer-container span{
+    color: var(--ember-glow);
+    font-family:'Orbitron', sans-serif;
+    font-weight:700;
+    font-size:18px;
+  }
+
+  .submit-btn{
+    width:100%;
+    margin-top:22px;
+    padding:14px 16px;
+    border:none; border-radius:11px;
+    font-family:'Orbitron', sans-serif;
+    font-weight:700; font-size:13.5px; letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#160305;
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-hot) 60%, #5a0a10);
+    cursor:pointer;
+    position:relative; overflow:hidden;
+    box-shadow: 0 12px 26px -8px rgba(200,30,44,0.55);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .submit-btn:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -8px rgba(255,59,68,0.65);
+  }
+  .submit-btn:active{ transform: translateY(0); }
+  .submit-btn::after{
+    content:"";
+    position:absolute; top:0; left:-60%;
+    width:40%; height:100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+    animation: sheen 3.2s ease-in-out infinite;
+  }
+  @keyframes sheen{
+    0%{ left:-60%; } 45%{ left:130%; } 100%{ left:130%; }
+  }
+
+  .resend-btn{
+    width:100%;
+    margin-top:10px;
+    padding:12px 16px;
+    border:1px solid var(--glass-edge);
+    border-radius:11px;
+    font-family:'Orbitron', sans-serif;
+    font-weight:500; font-size:12px; letter-spacing:0.06em;
+    text-transform:uppercase;
+    color: var(--bone);
+    background: transparent;
+    cursor:pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .resend-btn:hover{
+    border-color: var(--ember-glow);
+    color: var(--ember-glow);
+  }
+
+  @media (max-width: 860px){
+    .stage{
+      grid-template-columns: 1fr;
+      max-width:440px;
+      padding:24px 18px;
+    }
+    .guardian-column{ order:-1; }
+    .guardian-scene{ width:190px; height:210px; }
+    .guardian-caption h1{ font-size:18px; }
+    .auth-card{ padding:30px 24px 26px; }
+    .otp-input{ font-size:22px; letter-spacing:10px; padding-left:20px; }
+  }
+  @media (max-width: 380px){
+    .auth-card{ padding:24px 18px 22px; }
+    .guardian-scene{ width:160px; height:180px; }
+    .otp-input{ font-size:19px; letter-spacing:7px; padding-left:14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+<link rel="stylesheet" href="/static/css/top_controls.css">
+</head>
+<body>
+{% include 'partials/top_controls.html' %}
+
+  <div class="backdrop">
+  <div class="floor"></div>
+</div>
+
+<div class="stage">
+
+  <div class="guardian-column">
+    <div class="guardian-scene" id="guardianScene">
+      <div class="guardian">
+        <div class="guardian-shadow"></div>
+        <div class="ring ring1"></div>
+        <div class="ring ring2"></div>
+        <div class="core"></div>
+        <div class="guardian-inner" id="guardianInner">
+          <div class="torso">
+            <div class="torso-face front"></div>
+            <div class="torso-face back"></div>
+            <div class="torso-face right"></div>
+            <div class="torso-face left"></div>
+            <div class="torso-line"></div>
+          </div>
+          <div class="head">
+            <div class="head-face front"></div>
+            <div class="head-face back"></div>
+            <div class="head-face right"></div>
+            <div class="head-face left"></div>
+            <div class="head-face top"></div>
+            <div class="visor">
+              <div class="eye" id="eyeLeft"></div>
+              <div class="eye" id="eyeRight"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="guardian-caption">
+      <span class="eyebrow">Sentinelle Vault</span>
+      <h1>{{ t('guardian_confirm') }}</h1>
+      <p>{{ t('second_verification') }}</p>
+    </div>
+  </div>
+
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div class="brand-name">Vault</div>
+    </div>
+
+    <h2>{{ t('two_factor_auth') }}</h2>
+    <p class="sub">{{ t('enter_6_digit_code') }}</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div id="otpMsg" class="flash" style="display:none;"></div>
+    <form method="POST" id="otpForm" novalidate data-zk="1" data-expiry="{{ expiry or 0 }}" action="javascript:void(0);">
+            {% include 'partials/csrf_token.html' %}
+<div class="field otp-field">
+        <label for="otp_code">{{ t('verification_code') }}</label>
+        <input
+          type="text"
+          id="otp_code"
+          name="otp_code"
+          class="otp-input"
+          placeholder="000000"
+          inputmode="numeric"
+          pattern="[0-9]{6}"
+          autocomplete="one-time-code"
+          required>
+        <div class="otp-dots" id="otpDots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        Le code expire dans : <span id="timer">2:00</span>
+      </div>
+
+      <button type="submit" class="submit-btn">{{ t('verify') }}</button>
+    </form>
+
+    <form method="POST" id="resendForm" action="javascript:void(0);">
+            {% include 'partials/csrf_token.html' %}
+<input type="hidden" name="action" value="resend">
+      <button type="submit" class="resend-btn" id="resendBtn" style="display:none;">Recevoir un nouveau code</button>
+    </form>
+  </div>
+
+</div>
+
+<script nonce="{{ csp_nonce }}">
+(function(){
+  var backdrop = document.querySelector('.backdrop');
+  for(var i=0; i<26; i++){
+    var p = document.createElement('div');
+    p.className = 'ember-particle';
+    p.style.left = (Math.random()*100) + '%';
+    p.style.setProperty('--drift', (Math.random()*60-30) + 'px');
+    p.style.animationDuration = (6 + Math.random()*7) + 's';
+    p.style.animationDelay = (Math.random()*8) + 's';
+    p.style.width = p.style.height = (2 + Math.random()*2) + 'px';
+    backdrop.appendChild(p);
+  }
+
+  var inner = document.getElementById('guardianInner');
+  var eyeL = document.getElementById('eyeLeft');
+  var eyeR = document.getElementById('eyeRight');
+  var scene = document.getElementById('guardianScene');
+
+  var targetRX = 0, targetRY = 0, curRX = 0, curRY = 0;
+  var targetEX = 0, targetEY = 0, curEX = 0, curEY = 0;
+
+  function onPointerMove(clientX, clientY){
+    var rect = scene.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var dx = clientX - cx;
+    var dy = clientY - cy;
+
+    var maxDist = Math.max(window.innerWidth, window.innerHeight);
+    var nx = Math.max(-1, Math.min(1, dx / (maxDist * 0.5)));
+    var ny = Math.max(-1, Math.min(1, dy / (maxDist * 0.5)));
+
+    targetRY = nx * 26;
+    targetRX = -ny * 16;
+    targetEX = nx * 3.2;
+    targetEY = ny * 2.4;
+  }
+
+  window.addEventListener('mousemove', function(e){
+    onPointerMove(e.clientX, e.clientY);
+  });
+  window.addEventListener('touchmove', function(e){
+    if(e.touches && e.touches[0]){
+      onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, {passive:true});
+
+  function animate(){
+    curRX += (targetRX - curRX) * 0.08;
+    curRY += (targetRY - curRY) * 0.08;
+    curEX += (targetEX - curEX) * 0.15;
+    curEY += (targetEY - curEY) * 0.15;
+
+    inner.style.setProperty('--rx', curRX.toFixed(2) + 'deg');
+    inner.style.setProperty('--ry', curRY.toFixed(2) + 'deg');
+    eyeL.style.setProperty('--ex', curEX.toFixed(2) + 'px');
+    eyeL.style.setProperty('--ey', curEY.toFixed(2) + 'px');
+    eyeR.style.setProperty('--ex', curEX.toFixed(2) + 'px');
+    eyeR.style.setProperty('--ey', curEY.toFixed(2) + 'px');
+
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  var otpInput = document.getElementById('otp_code');
+  var dots = document.querySelectorAll('#otpDots .dot');
+
+  function updateDots(){
+    var len = otpInput.value.length;
+    dots.forEach(function(dot, index){
+      if(index < len){
+        dot.classList.add('filled');
+      } else {
+        dot.classList.remove('filled');
+      }
+    });
+  }
+
+  otpInput.addEventListener('input', function(){
+    otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
+    updateDots();
+  });
+
+  otpInput.focus();
+
+  var endTime = parseInt(document.getElementById('otpForm').dataset.expiry) || 0;
+  
+  function updateTimer(){
+    var now = Math.floor(Date.now()/1000);
+    var remaining = endTime - now;
+    if(remaining <= 0){
+      document.getElementById('timer').textContent = 'Expiré';
+      document.getElementById('resendBtn').style.display = 'block';
+      return;
+    }
+    document.getElementById('resendBtn').style.display = 'none';
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    document.getElementById('timer').textContent = m + ':' + (s<10?'0':'') + s;
+  }
+  setInterval(updateTimer, 1000);
+  updateTimer();
+
+  // Setup form loaders
+  var otpForm = document.getElementById('otpForm');
+  var verifyBtn = otpForm.querySelector('button[type="submit"]');
+  
+  otpForm.addEventListener('submit', function(e) {
+    verifyBtn.classList.add('btn-loader');
+    verifyBtn.disabled = true;
+  });
+
+  var resendForm = document.getElementById('resendForm');
+  var resendBtn = resendForm.querySelector('button[type="submit"]');
+  
+  resendForm.addEventListener('submit', function(e) {
+    resendBtn.classList.add('btn-loader');
+    resendBtn.disabled = true;
+  });
+})();
+</script>
+
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-auth.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --void:        #070404;
+    --void-deep:   #030101;
+    --ember:       #7a0f16;
+    --ember-hot:   #c81e2c;
+    --ember-glow:  #ff3b44;
+    --bone:        #f3e6e4;
+    --ash:         #9a7f7e;
+    --glass:       rgba(35, 12, 14, 0.35);
+    --glass-edge:  rgba(255, 90, 90, 0.16);
+    --radius:      18px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+
+  body{
+    font-family:'Inter', sans-serif;
+    color: var(--bone);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .backdrop{
+    position:fixed; inset:0; z-index:0; overflow:hidden;
+  }
+  .floor{
+    position:absolute; left:0; right:0; bottom:-10%;
+    height:60%;
+    background-image:
+      linear-gradient(rgba(200,40,50,0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,40,50,0.14) 1px, transparent 1px);
+    background-size: 46px 46px;
+    transform: perspective(500px) rotateX(72deg);
+    -webkit-mask-image: linear-gradient(180deg, transparent, black 30%, black);
+            mask-image: linear-gradient(180deg, transparent, black 30%, black);
+    opacity:0.55;
+    animation: floorScroll 6s linear infinite;
+  }
+  @keyframes floorScroll{
+    from{ background-position: 0 0, 0 0; }
+    to{ background-position: 0 46px, 46px 0; }
+  }
+  .ember-particle{
+    position:absolute; bottom:-5%;
+    width:3px; height:3px; border-radius:50%;
+    background: var(--ember-glow);
+    box-shadow:0 0 8px 2px var(--ember-glow);
+    opacity:0.7;
+    animation: rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.8; }
+    100%{ transform:translateY(-115vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    width:100%;
+    max-width:460px;
+    padding:24px;
+  }
+
+  .auth-card{
+    position:relative;
+    background: var(--glass);
+    border:1px solid var(--glass-edge);
+    border-radius: var(--radius);
+    padding:38px 36px 32px;
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(255,60,68,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    animation: cardRise 0.7s cubic-bezier(.2,.9,.25,1) both;
+  }
+  @keyframes cardRise{
+    from{ opacity:0; transform: translateY(24px) rotateX(6deg); }
+    to{ opacity:1; transform: translateY(0) rotateX(0deg); }
+  }
+  .auth-card::before{
+    content:"";
+    position:absolute; inset:-1px; border-radius:inherit; padding:1px;
+    background: linear-gradient(135deg, rgba(255,80,90,0.5), transparent 30%, transparent 70%, rgba(255,80,90,0.25));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events:none;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; margin-bottom:26px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background: linear-gradient(135deg, var(--ember-hot), #3a0409);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 0 16px rgba(200,30,44,0.5);
+    font-family:'Orbitron', sans-serif; font-weight:900; font-size:15px;
+  }
+  .brand-name{
+    font-family:'Orbitron', sans-serif; font-size:14px; letter-spacing:0.14em;
+    text-transform:uppercase; color: var(--bone);
+  }
+  .auth-card h2{ font-family:'Orbitron', sans-serif; font-size:24px; font-weight:700; margin-bottom:6px; }
+  .auth-card .sub{ font-size:13px; color: var(--ash); margin-bottom:22px; line-height:1.55; }
+
+  .flash{
+    font-size:13px; padding:11px 14px; border-radius:10px;
+    margin-bottom:14px; border:1px solid transparent;
+    animation: flashIn 0.35s ease both;
+  }
+  @keyframes flashIn{ from{ opacity:0; transform: translateY(-6px); } to{ opacity:1; transform: translateY(0); } }
+  .flash.success{ background: rgba(30, 140, 80, 0.14); border-color: rgba(60,200,120,0.35); color:#8beeb4; }
+  .flash.error{ background: rgba(200, 30, 44, 0.14); border-color: rgba(255,80,90,0.4); color:#ff9ba0; }
+  .flash.info{ background: rgba(90, 110, 220, 0.12); border-color: rgba(120,140,255,0.35); color:#b7c2ff; }
+
+  .file-summary{
+    display:flex; align-items:center; gap:14px;
+    background: rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:18px;
+  }
+  .file-summary-icon{
+    width:44px; height:44px; border-radius:11px;
+    background: rgba(200,30,44,0.16);
+    color: var(--ember-glow);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .file-summary-info{ min-width:0; }
+  .file-summary-name{
+    font-size:14.5px; font-weight:600; color: var(--bone);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .file-summary-size{ font-size:12px; color: var(--ash); margin-top:3px; }
+
+  .warning-note{
+    display:flex; align-items:flex-start; gap:10px;
+    background: rgba(200,30,44,0.08);
+    border:1px solid rgba(255,90,90,0.25);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:22px;
+  }
+  .warning-note .warning-icon{ color: var(--ember-glow); flex-shrink:0; margin-top:1px; }
+  .warning-note p{ font-size:12.5px; color: var(--ash); line-height:1.5; }
+
+  .field{ margin-bottom:18px; position:relative; }
+  .field label{
+    display:block; font-size:11.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color: var(--ash);
+    margin-bottom:7px;
+  }
+  .field input{
+    width:100%;
+    background: rgba(10,3,4,0.55);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:13px 40px 13px 14px;
+    color: var(--bone);
+    font-size:14px;
+    font-family:'Inter', sans-serif;
+    outline:none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .field input::placeholder{ color:#5c4a4a; }
+  .field input:focus{
+    border-color: var(--ember-hot);
+    background: rgba(15,4,5,0.75);
+    box-shadow: 0 0 0 3px rgba(200,30,44,0.16), 0 0 18px rgba(200,30,44,0.25);
+  }
+  .toggle-password{
+    position:absolute; right:10px; top:34px; background:none; border:none;
+    color:var(--ash); cursor:pointer; padding:4px;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  }
+  .toggle-password:hover{color:var(--bone);}
+  .toggle-password svg{width:18px; height:18px; fill:currentColor;}
+
+  .submit-btn{
+    width:100%; margin-top:6px; padding:14px 16px;
+    border:none; border-radius:11px;
+    font-family:'Orbitron', sans-serif; font-weight:700; font-size:13.5px;
+    letter-spacing:0.06em; text-transform:uppercase;
+    color:#160305;
+    background: linear-gradient(135deg, var(--ember-glow), var(--ember-hot) 60%, #5a0a10);
+    cursor:pointer; position:relative; overflow:hidden;
+    box-shadow: 0 12px 26px -8px rgba(200,30,44,0.55);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .submit-btn:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -8px rgba(255,59,68,0.65);
+  }
+  .submit-btn:active{ transform: translateY(0); }
+  .submit-btn::after{
+    content:"";
+    position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+    animation: sheen 3.2s ease-in-out infinite;
+  }
+  @keyframes sheen{ 0%{ left:-60%; } 45%{ left:130%; } 100%{ left:130%; } }
+
+  .switch-line{ text-align:center; margin-top:20px; font-size:13px; color: var(--ash); }
+  .switch-line a{
+    color: var(--ember-glow); text-decoration:none; font-weight:600;
+    border-bottom:1px solid rgba(255,59,68,0.35);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .switch-line a:hover{ color:#fff; border-color:#fff; }
+
+  @media (max-width: 500px){
+    .auth-card{ padding:30px 24px 26px; }
+    .file-summary{ padding:14px; gap:12px; }
+  }
+  @media (max-width: 380px){
+    .auth-card{ padding:24px 18px 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+
+<div class="backdrop">
+  <div class="floor"></div>
+</div>
+
+<div class="stage">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div class="brand-name">Vault</div>
+    </div>
+
+    <h2>{{ t('download_file') }}</h2>
+    <p class="sub">{{ t('enter_password_to_decrypt') }}</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="file-summary">
+      <div class="file-summary-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 3 H14 L18 7 V21 H7 Z"></path>
+          <path d="M14 3 V7 H18"></path>
+        </svg>
+      </div>
+      <div class="file-summary-info">
+        <div class="file-summary-name">{{ file.filename }}</div>
+        <div class="file-summary-size">{{ file_size }}</div>
+      </div>
+    </div>
+
+    <div class="warning-note">
+      <div class="warning-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+          <path d="M8 11 V7 C8 4.8 9.8 3 12 3 C14.2 3 16 4.8 16 7 V11"></path>
+        </svg>
+      </div>
+      <p>{{ t('password_required_to_decrypt') }}</p>
+    </div>
+
+    <form method="POST" id="downloadForm" target="_self" enctype="application/x-www-form-urlencoded">
+            {% include 'partials/csrf_token.html' %}
+<div class="field">
+        <label for="password">{{ t('password') }}</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
+          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </button>
+      </div>
+
+      <button type="submit" class="submit-btn" id="downloadBtn">{{ t('decrypt_and_download') }}</button>
+
+      <div class="switch-line">
+        <a href="/dashboard">← {{ t('back_to_dashboard') }}</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  var lang = '{{ lang or "fr" }}';
+  var backdrop = document.querySelector('.backdrop');
+  for(var i=0; i<26; i++){
+    var p = document.createElement('div');
+    p.className = 'ember-particle';
+    p.style.left = (Math.random()*100) + '%';
+    p.style.setProperty('--drift', (Math.random()*60-30) + 'px');
+    p.style.animationDuration = (6 + Math.random()*7) + 's';
+    p.style.animationDelay = (Math.random()*8) + 's';
+    p.style.width = p.style.height = (2 + Math.random()*2) + 'px';
+    backdrop.appendChild(p);
+  }
+  var passwordField = document.getElementById('password');
+  if(passwordField){ passwordField.focus(); }
+
+  var downloadForm = document.getElementById('downloadForm');
+  var downloadBtn = document.getElementById('downloadBtn');
+  downloadForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = lang === 'en' ? 'Decrypting...' : 'Déchiffrement en cours...';
+    downloadBtn.style.opacity = '0.7';
+
+    var formData = new FormData(downloadForm);
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    var csrfInput = downloadForm.querySelector('input[name="csrf_token"]');
+    if (csrfInput && csrfInput.value) {
+      csrfToken = csrfInput.value;
+    }
+
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    })
+    .then(function(resp){
+      var contentType = resp.headers.get('content-type') || '';
+      if (contentType.indexOf('application/json') !== -1) {
+        return resp.json().then(function(data){
+          return { ok: resp.ok, data: data };
+        });
+      }
+      return { ok: false, data: { error: lang === 'en' ? 'Session expired. Please reload the page.' : 'Session expirée. Rechargez la page.' } };
+    })
+    .then(function(result){
+      var data = result.data || {};
+      if(result.ok && data.token){
+        window.location.href = '/download-file/' + data.token;
+        setTimeout(function(){
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = '{{ t("decrypt_and_download") }}';
+          downloadBtn.style.opacity = '1';
+        }, 3000);
+      } else {
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = '{{ t("decrypt_and_download") }}';
+        downloadBtn.style.opacity = '1';
+        var flash = document.createElement('div');
+        flash.className = 'flash error';
+        flash.textContent = data.error || (lang === 'en' ? 'Download failed.' : 'Échec du téléchargement.');
+        downloadForm.insertBefore(flash, downloadForm.firstChild);
+      }
+    })
+    .catch(function(){
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = '{{ t("decrypt_and_download") }}';
+      downloadBtn.style.opacity = '1';
+      var flash = document.createElement('div');
+      flash.className = 'flash error';
+      flash.textContent = lang === 'en' ? 'Download failed. Please try again.' : 'Échec du téléchargement. Réessayez.';
+      downloadForm.insertBefore(flash, downloadForm.firstChild);
+    });
+  });
+})();
+function togglePassword(id, btn){
+  var input = document.getElementById(id);
+  var svg = btn.querySelector('svg');
+  if(input.type === 'password'){
+    input.type = 'text';
+    svg.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/><line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2"/>';
+  } else {
+    input.type = 'password';
+    svg.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+  }
+}
+</script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

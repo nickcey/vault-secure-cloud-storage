@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault Admin</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --void:#070404; --void-deep:#030101; --ember:#7a0f16;
+    --ember-hot:#c81e2c; --ember-glow:#ff3b44; --bone:#f3e6e4;
+    --ash:#9a7f7e; --glass:rgba(35,12,14,0.35); --glass-edge:rgba(255,90,90,0.16);
+    --radius:16px; --amber:#ffb43c; --green:#2ecc71; --red:#ff5a64; --blue:#4d9de0;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{ font-family:'Inter',sans-serif; color:var(--bone); min-height:100vh; }
+  .backdrop{ position:fixed; inset:0; z-index:0; }
+  .admin-layout{ position:relative; z-index:1; display:flex; min-height:100vh; }
+  /* Sidebar */
+  .sidebar{ width:230px; flex-shrink:0; display:flex; flex-direction:column; background:rgba(10,4,5,0.6); border-right:1px solid var(--glass-edge); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); position:sticky; top:0; height:100vh; }
+  .sidebar-brand{ display:flex; align-items:center; gap:10px; padding:22px 20px; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .brand-mark{ width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,var(--ember-hot),#3a0409); display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-weight:900; font-size:14px; flex-shrink:0; }
+  .brand-name{ font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; }
+  .brand-name .sub-label{ display:block; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.08em; color:var(--ash); text-transform:none; margin-top:2px; }
+  .sidebar-nav{ flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:3px; }
+  .nav-item{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; color:var(--ash); text-decoration:none; font-size:13px; font-weight:500; transition:background 0.15s,color 0.15s; border-left:2px solid transparent; }
+  .nav-item svg{ flex-shrink:0; opacity:0.85; }
+  .nav-item:hover{ background:rgba(255,255,255,0.04); color:var(--bone); }
+  .nav-item.active{ background:rgba(200,30,44,0.14); color:var(--bone); border-left:2px solid var(--ember-glow); }
+  .sidebar-footer{ padding:14px 16px 18px; border-top:1px solid rgba(255,255,255,0.06); }
+  .admin-badge{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .admin-avatar{ width:32px; height:32px; border-radius:50%; background:rgba(255,180,60,0.16); border:1px solid rgba(255,180,60,0.35); display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:var(--amber); flex-shrink:0; }
+  .admin-info{ min-width:0; }
+  .admin-name{ font-size:12.5px; font-weight:600; color:var(--bone); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .admin-email{ font-size:11px; color:var(--ash); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .logout-link{ display:block; text-align:center; font-size:12px; color:var(--ash); text-decoration:none; padding:8px; border:1px solid rgba(255,255,255,0.08); border-radius:8px; transition:background 0.15s,color 0.15s; }
+  .logout-link:hover{ background:rgba(200,30,44,0.14); color:var(--bone); }
+  /* Main */
+  .admin-main{ flex:1; min-width:0; padding:30px 34px 60px; }
+  .admin-header{ margin-bottom:22px; }
+  .admin-header h1{ font-family:'Orbitron',sans-serif; font-size:22px; font-weight:700; }
+  .admin-header p{ font-size:12.5px; color:var(--ash); margin-top:5px; }
+  .flash{ font-size:13px; padding:11px 14px; border-radius:10px; margin-bottom:16px; border:1px solid transparent; }
+  .flash.success{ background:rgba(30,140,80,0.14); border-color:rgba(60,200,120,0.35); color:#8beeb4; }
+  .flash.error{ background:rgba(200,30,44,0.14); border-color:rgba(255,80,90,0.4); color:#ff9ba0; }
+  .flash.info{ background:rgba(90,110,220,0.12); border-color:rgba(120,140,255,0.35); color:#b7c2ff; }
+  /* KPI */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+  .kpi-card{ background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius); padding:18px 18px 16px; backdrop-filter:blur(18px); }
+  .kpi-icon{ width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:var(--ember-glow); }
+  .kpi-value{ font-family:'Orbitron',sans-serif; font-size:22px; font-weight:800; }
+  .kpi-label{ font-size:11px; color:var(--ash); margin-top:4px; }
+  /* Panels */
+  .panel{ background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius); padding:22px 24px; margin-bottom:20px; backdrop-filter:blur(18px); }
+  .panel h2{ font-family:'Orbitron',sans-serif; font-size:14px; font-weight:700; margin-bottom:18px; letter-spacing:0.03em; }
+  .panel-empty{ font-size:12.5px; color:var(--ash); padding:10px 0; }
+  .two-col-panels{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .two-col-panels .panel{ margin-bottom:0; }
+  .charts-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  .chart-wrapper{ background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius); padding:20px 22px; backdrop-filter:blur(18px); }
+  .chart-wrapper h2{ font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700; margin-bottom:14px; }
+  .chart-container{ position:relative; height:180px; }
+  .chart-three-col{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px; }
+  .live-badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--green); }
+  .live-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(46,204,113,0.4); } 50%{ opacity:0.8; box-shadow:0 0 0 5px rgba(46,204,113,0); } }
+  /* Plan bars */
+  .plan-bar-row{ display:flex; align-items:center; gap:14px; margin-bottom:13px; }
+  .plan-bar-row:last-child{ margin-bottom:0; }
+  .plan-bar-label{ width:80px; flex-shrink:0; font-size:12px; color:var(--bone); text-transform:capitalize; }
+  .plan-bar-track{ flex:1; height:9px; border-radius:6px; background:rgba(255,255,255,0.05); overflow:hidden; }
+  .plan-bar-fill{ height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--ember-hot),var(--ember-glow)); }
+  .plan-bar-count{ width:32px; flex-shrink:0; text-align:right; font-size:12px; color:var(--ash); font-family:'JetBrains Mono',monospace; }
+  /* Tables */
+  .data-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .data-table th{ text-align:left; font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--ash); padding:0 10px 10px 0; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .data-table td{ padding:10px 10px 10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--bone); vertical-align:middle; }
+  .data-table tr:last-child td{ border-bottom:none; }
+  .cell-user{ display:flex; align-items:center; gap:9px; }
+  .cell-avatar{ width:26px; height:26px; border-radius:50%; flex-shrink:0; background:rgba(200,30,44,0.18); border:1px solid rgba(255,90,90,0.3); display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-size:10.5px; font-weight:700; color:var(--ember-glow); }
+  .badge-plan,.badge-status{ display:inline-block; padding:3px 9px; border-radius:6px; font-size:10.5px; font-weight:600; text-transform:capitalize; }
+  .badge-plan.free{ background:rgba(154,127,126,0.16); color:var(--ash); }
+  .badge-plan.starter{ background:rgba(77,157,224,0.16); color:var(--blue); }
+  .badge-plan.pro{ background:rgba(255,59,68,0.16); color:var(--ember-glow); }
+  .badge-plan.premium{ background:rgba(255,180,60,0.16); color:var(--amber); }
+  .badge-status.success{ background:rgba(46,204,113,0.16); color:var(--green); }
+  .badge-status.pending{ background:rgba(255,180,60,0.16); color:var(--amber); }
+  .badge-status.failed{ background:rgba(255,90,100,0.16); color:var(--red); }
+  /* Activity */
+  .activity-feed{ list-style:none; }
+  .activity-item{ display:flex; align-items:flex-start; gap:11px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .activity-item:last-child{ border-bottom:none; }
+  .activity-dot{ width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; background:var(--ember-glow); box-shadow:0 0 6px rgba(255,59,68,0.6); }
+  .activity-text{ font-size:12.5px; color:var(--bone); }
+  .activity-text strong{ font-weight:600; }
+  .activity-time{ font-size:11px; color:var(--ash); margin-left:auto; flex-shrink:0; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
+  /* Responsive */
+  @media(max-width:980px){ .two-col-panels{ grid-template-columns:1fr; } }
+  @media(max-width:820px){
+    .admin-layout{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:relative; }
+    .sidebar-nav{ flex-direction:row; overflow-x:auto; padding:10px; }
+    .nav-item{ border-left:none; border-bottom:2px solid transparent; white-space:nowrap; }
+    .nav-item.active{ border-left:none; border-bottom:2px solid var(--ember-glow); }
+    .sidebar-footer{ display:none; }
+    .admin-main{ padding:22px 18px 50px; }
+  }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<button class="mobile-menu-toggle" onclick="toggleSidebar()" style="display:none;">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="backdrop"></div>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">V</div>
+      <div class="brand-name">Vault<span class="sub-label">admin console</span></div>
+      <button onclick="toggleTheme()" style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;border:1px solid rgba(255,90,90,0.2);background:transparent;color:var(--ash);font-size:11px;cursor:pointer;transition:all 0.2s;flex-shrink:0;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">
+        <span class="theme-icon">☀️</span>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-item active">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="5" rx="1.5"></rect><rect x="13" y="11" width="8" height="10" rx="1.5"></rect><rect x="3" y="14" width="8" height="7" rx="1.5"></rect></svg>
+        Dashboard
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="nav-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.5 20 C4.5 15.5 6.7 14 9 14 C11.3 14 13.5 15.5 14.5 20"></path><circle cx="17" cy="9" r="2.4"></circle><path d="M15.2 20 C15.8 17 17.3 15.8 19 15.8 C20 15.8 20.9 16.2 21.5 17"></path></svg>
+        Utilisateurs
+      </a>
+      <a href="{{ url_for('admin_payments') }}" class="nav-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10 H21"></path><path d="M6.5 15 H10"></path></svg>
+        Paiements
+      </a>
+      <a href="{{ url_for('admin_activity') }}" class="nav-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 H7 L9.5 5 L14.5 19 L17 12 H21"></path></svg>
+        Activité
+      </a>
+      <a href="{{ url_for('admin_promos') }}" class="nav-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L15 8"></path><circle cx="9.5" cy="8.5" r="1.5"></circle><circle cx="14.5" cy="13.5" r="1.5"></circle><rect x="3" y="3" width="18" height="18" rx="3"></rect></svg>
+        Promotions
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-badge">
+        <div class="admin-avatar">{{ admin.username[0]|upper }}</div>
+        <div class="admin-info">
+          <div class="admin-name">{{ admin.username }}</div>
+          <div class="admin-email">{{ admin.email }}</div>
+        </div>
+      </div>
+      <a href="{{ url_for('set_language', lang='fr' if lang == 'en' else 'en') }}" class="logout-link" style="margin-bottom:8px;" translate="no">{{ '🇫🇷 Français' if lang == 'en' else '🇬🇧 English' }}</a>
+      <a href="{{ url_for('logout') }}" class="logout-link">Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <h1>Dashboard</h1>
+      <p>Vue d'ensemble de la plateforme Vault</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.5 20 C4.5 15.5 6.7 14 9 14 C11.3 14 13.5 15.5 14.5 20"></path><circle cx="17" cy="9" r="2.4"></circle><path d="M15.2 20 C15.8 17 17.3 15.8 19 15.8 C20 15.8 20.9 16.2 21.5 17"></path></svg></div>
+        <div class="kpi-value">{{ total_users }}</div>
+        <div class="kpi-label">Utilisateurs</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3 H14 L18 7 V21 H7 Z"></path><path d="M14 3 V7 H18"></path></svg></div>
+        <div class="kpi-value">{{ total_files }}</div>
+        <div class="kpi-label">Fichiers stockés</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5 V12 C4 13.66 7.58 15 12 15 C16.42 15 20 13.66 20 12 V5"></path><path d="M4 12 V19 C4 20.66 7.58 22 12 22 C16.42 22 20 20.66 20 19 V12"></path></svg></div>
+        <div class="kpi-value">{{ total_storage }}</div>
+        <div class="kpi-label">Stockage utilisé</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 V22 M17 6 C17 4 14.8 3 12 3 C9.2 3 7 4.5 7 6.8 C7 11.2 17 9.5 17 14.5 C17 17 14.8 18.5 12 18.5 C9.2 18.5 7 17 7 15"></path></svg></div>
+        <div class="kpi-value">{{ total_revenue }} FCFA</div>
+        <div class="kpi-label">Revenus totaux</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 V12 L15.5 14.5"></path></svg></div>
+        <div class="kpi-value" id="liveSessionCount">{{ active_sessions_count }}</div>
+        <div class="kpi-label">Sessions actives <span class="live-badge"><span class="live-dot"></span>live</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10 H21"></path></svg></div>
+        <div class="kpi-value">{{ pending_payments_count }}</div>
+        <div class="kpi-label">Paiements en attente</div>
+      </div>
+    </div>
+
+    <div class="charts-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="chart-wrapper">
+        <h2>Inscriptions (6 derniers mois)</h2>
+        <div class="chart-container"><canvas id="chartSignups"></canvas></div>
+      </div>
+      <div class="chart-wrapper">
+        <h2>Revenus (6 derniers mois)</h2>
+        <div class="chart-container"><canvas id="chartRevenue"></canvas></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;margin-bottom:20px;">
+      <div class="chart-wrapper">
+        <h2>Répartition des plans</h2>
+        <div class="chart-container" style="height:220px;"><canvas id="chartPlans"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Répartition des formules (barres)</h2>
+        {% set plan_labels = {'free':'Gratuit','starter':'Starter','pro':'Pro','premium':'Premium'} %}
+        {% set max_count = [plan_stats.free, plan_stats.starter, plan_stats.pro, plan_stats.premium]|max %}
+        {% for key in ['free','starter','pro','premium'] %}
+        <div class="plan-bar-row">
+          <span class="plan-bar-label">{{ plan_labels[key] }}</span>
+          <div class="plan-bar-track">
+            <div class="plan-bar-fill" style="width:{{ ((plan_stats[key] / (max_count or 1)) * 100)|int }}%"></div>
+          </div>
+          <span class="plan-bar-count">{{ plan_stats[key] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="two-col-panels">
+      <div class="panel">
+        <h2>Derniers inscrits</h2>
+        {% if recent_users %}
+        <table class="data-table">
+          <thead><tr><th>Utilisateur</th><th>Plan</th><th>Inscrit le</th></tr></thead>
+          <tbody>
+            {% for u in recent_users %}
+            <tr>
+              <td>
+                <div class="cell-user">
+                  <div class="cell-avatar">{{ u.username[0]|upper }}</div>
+                  {{ u.username }}
+                </div>
+              </td>
+              <td><span class="badge-plan {{ u.plan }}">{{ u.plan }}</span></td>
+              <td>{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="panel-empty">Aucun utilisateur pour le moment.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <h2>Derniers paiements</h2>
+        {% if recent_payments %}
+        <table class="data-table">
+          <thead><tr><th>Utilisateur</th><th>Montant</th><th>Statut</th></tr></thead>
+          <tbody>
+            {% for p in recent_payments %}
+            <tr>
+              <td>{{ p.email }}</td>
+              <td>{{ p.amount }} FCFA</td>
+              <td><span class="badge-status {{ p.status }}">{{ p.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="panel-empty">Aucun paiement pour le moment.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+// ── Compteur sessions actives temps réel ──
+function refreshSessions(){
+  fetch('/admin/api/stats')
+    .then(r => r.json())
+    .then(data => {
+      var el = document.getElementById('liveSessionCount');
+      if(el) el.textContent = data.active_now;
+    })
+    .catch(() => {});
+}
+setInterval(refreshSessions, 15000);
+
+// ── Chargement des graphiques ──
+fetch('/admin/api/stats')
+  .then(r => r.json())
+  .then(data => {
+
+    // Graphique inscriptions
+    var ctxSignups = document.getElementById('chartSignups');
+    if(ctxSignups){
+      new Chart(ctxSignups, {
+        type: 'bar',
+        data: {
+          labels: data.labels_months,
+          datasets: [{
+            label: 'Inscriptions',
+            data: data.signups_by_month,
+            backgroundColor: 'rgba(200,30,44,0.5)',
+            borderColor: '#ff3b44',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#9a7f7e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: { ticks: { color: '#9a7f7e', font: { size: 11 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Graphique revenus
+    var ctxRevenue = document.getElementById('chartRevenue');
+    if(ctxRevenue){
+      new Chart(ctxRevenue, {
+        type: 'line',
+        data: {
+          labels: data.labels_months,
+          datasets: [{
+            label: 'Revenus (FCFA)',
+            data: data.revenue_by_month,
+            borderColor: '#ffb43c',
+            backgroundColor: 'rgba(255,180,60,0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#ffb43c'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#9a7f7e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: { ticks: { color: '#9a7f7e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Graphique donut plans
+    var ctxPlans = document.getElementById('chartPlans');
+    if(ctxPlans){
+      new Chart(ctxPlans, {
+        type: 'doughnut',
+        data: {
+          labels: ['Gratuit', 'Starter', 'Pro', 'Premium'],
+          datasets: [{
+            data: [data.plan_data.free, data.plan_data.starter, data.plan_data.pro, data.plan_data.premium],
+            backgroundColor: ['rgba(154,127,126,0.6)', 'rgba(77,157,224,0.7)', 'rgba(255,59,68,0.7)', 'rgba(255,180,60,0.7)'],
+            borderColor: ['#9a7f7e', '#4d9de0', '#ff3b44', '#ffb43c'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#9a7f7e', font: { size: 11 }, padding: 12 } }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+  })
+  .catch(() => {});
+</script>
+<script src="/static/theme.js"></script>
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-overlay').classList.toggle('visible');
+}
+</script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

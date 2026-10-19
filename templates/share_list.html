@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;position:relative;}
+  .navbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 32px;background:rgba(10,4,5,0.55);border-bottom:1px solid var(--glass-edge);backdrop-filter:blur(20px);}
+  .nav-brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid rgba(255,90,90,0.35);border-radius:8px;color:var(--bone);font-size:12.5px;text-decoration:none;background:transparent;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(200,30,44,0.16);}
+  .main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:36px 32px 70px;}
+  .page-header{margin-bottom:24px;}
+  .page-header h1{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .page-header p{font-size:13px;color:var(--ash);margin-top:5px;}
+  .flash{font-size:13px;padding:11px 14px;border-radius:10px;margin-bottom:16px;border:1px solid transparent;}
+  .flash.success{background:rgba(30,140,80,0.14);border-color:rgba(60,200,120,0.35);color:#8beeb4;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:0;backdrop-filter:blur(22px);overflow:hidden;}
+  .link-row{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .link-row:last-child{border-bottom:none;}
+  .link-icon{width:38px;height:38px;border-radius:10px;background:rgba(200,30,44,0.14);display:flex;align-items:center;justify-content:center;color:var(--ember-glow);flex-shrink:0;}
+  .link-info{flex:1;min-width:0;}
+  .link-label{font-size:14px;font-weight:500;color:var(--bone);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .link-meta{font-size:11.5px;color:var(--ash);margin-top:3px;}
+  .link-meta span{margin-right:12px;}
+  .link-actions{display:flex;gap:8px;flex-shrink:0;}
+  .btn-revoke{padding:7px 14px;border:1px solid rgba(255,90,90,0.3);border-radius:8px;background:rgba(200,30,44,0.1);color:var(--ember-glow);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+  .btn-revoke:hover{background:rgba(200,30,44,0.2);}
+  .empty-state{text-align:center;padding:50px;color:var(--ash);}
+  .empty-state p{font-size:15px;color:var(--bone);margin-bottom:6px;}
+  .link-actions{ display:flex; gap:8px; align-items:center; }
+  .btn-copy{ padding:7px 14px; border:1px solid rgba(255,255,255,0.12); border-radius:8px; background:transparent;
+    color:var(--bone); font-size:12px; cursor:pointer; font-family:inherit; transition:background 0.2s, border-color 0.2s; }
+  .btn-copy:hover{ background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.25); }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="brand-mark">V</div>
+    <span class="brand-name">Vault</span>
+  </div>
+  <a href="/dashboard" class="back-btn">← Dashboard</a>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>Mes liens de partage</h1>
+    <p>Gérez vos liens de partage actifs</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <div id="shareList"></div>
+    <div class="empty-state" id="shareEmpty" style="display:none;">
+      <p>Aucun lien actif</p>
+      <span>Partagez des fichiers depuis votre dashboard.</span>
+    </div>
+  </div>
+
+  <div class="page-header" style="margin-top:34px;">
+    <h1 style="font-size:18px;">Partagés avec des utilisateurs Vault</h1>
+    <p>Fichiers partagés par proxy re-encryption. Révoquer un partage empêche le serveur de re-chiffrer le fichier pour ce destinataire.</p>
+  </div>
+  <div class="card">
+    <div id="userSharesList"></div>
+    <div class="empty-state" id="userSharesEmpty" style="display:none;">
+      <p>Aucun partage avec un utilisateur</p>
+      <span>Utilisez « Partager » puis « Utilisateur Vault » depuis votre dashboard.</span>
+    </div>
+  </div>
+</main>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-share-list.js"></script>
+<script src="/static/js/vault-pre.js"></script>
+<script src="/static/js/vault-shared.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

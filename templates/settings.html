@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{--void:#070404;--void-deep:#030101;--ember-hot:#c81e2c;--ember-glow:#ff3b44;--bone:#f3e6e4;--ash:#9a7f7e;--glass:rgba(35,12,14,0.35);--glass-edge:rgba(255,90,90,0.16);--radius:18px;}
+  *{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);min-height:100vh;position:relative;}
+  .navbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 32px;background:rgba(10,4,5,0.55);border-bottom:1px solid var(--glass-edge);backdrop-filter:blur(20px);}
+  .nav-brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bone);}
+  .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid rgba(255,90,90,0.35);border-radius:8px;color:var(--bone);font-size:12.5px;text-decoration:none;background:transparent;transition:all 0.2s;}
+  .back-btn:hover{background:rgba(200,30,44,0.16);}
+  .main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:36px 32px 70px;}
+  .page-header{margin-bottom:28px;}
+  .page-header h1{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .page-header p{font-size:13px;color:var(--ash);margin-top:5px;}
+  .flash{font-size:13px;padding:11px 14px;border-radius:10px;margin-bottom:16px;border:1px solid transparent;}
+  .flash.success{background:rgba(30,140,80,0.14);border-color:rgba(60,200,120,0.35);color:#8beeb4;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+  .stat{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:18px 20px;backdrop-filter:blur(22px);}
+  .stat .val{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+  .stat .lbl{font-size:11px;color:var(--ash);margin-top:4px;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:var(--radius);padding:24px 26px;backdrop-filter:blur(22px);margin-bottom:20px;}
+  .card h2{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ash);margin-bottom:7px;}
+  .field input{width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;color:var(--bone);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
+  .field input:focus{border-color:var(--ember-hot);}
+  .field input::placeholder{color:#5c4a4a;}
+  .field .hint{font-size:11px;color:var(--ash);margin-top:4px;}
+  .submit-btn{padding:12px 22px;border:none;border-radius:10px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#160305;background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 8px 20px -6px rgba(200,30,44,0.5);}
+  .submit-btn:hover{transform:translateY(-1px);}
+  .quota-bar{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px;}
+  .quota-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ember-hot),var(--ember-glow));}
+  .quota-info{font-size:12px;color:var(--ash);margin-top:6px;}
+  .account-info{display:flex;flex-direction:column;gap:10px;}
+  .info-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .info-row:last-child{border-bottom:none;}
+  .info-row .ilabel{color:var(--ash);}
+  .info-row .ivalue{color:var(--bone);font-weight:500;}
+  @media(max-width:600px){.stats-row{grid-template-columns:1fr;}.main{padding:24px 16px 50px;}}
+  .lang-select:focus{ border-color:var(--ember-hot) !important; }
+  .links-btn:hover{ background:rgba(200,30,44,0.15); }
+  .fp{ font-family:Consolas,'DejaVu Sans Mono','Courier New',monospace; font-weight:700; letter-spacing:1px; color:var(--ember-glow); }
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body data-email="{{ user.email }}">
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="brand-mark">V</div>
+    <span class="brand-name">Vault</span>
+  </div>
+  <a href="/dashboard" class="back-btn">← {{ t('dashboard') }}</a>
+</nav>
+<main class="main">
+  <div class="page-header">
+    <h1>{{ t('settings') }}</h1>
+    <p>{{ t('manage_preferences') }}</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="stats-row">
+    <div class="stat"><div class="val">{{ file_count }}</div><div class="lbl">{{ t('files_stored') }}</div></div>
+    <div class="stat"><div class="val">{{ used_space }}</div><div class="lbl">{{ t('used_storage') }}</div></div>
+    <div class="stat"><div class="val">{{ active_links }}</div><div class="lbl">{{ t('active_links') }}</div></div>
+  </div>
+
+  <div class="card">
+    <h2>{{ t('account') }}</h2>
+    <div class="account-info">
+      <div class="info-row"><span class="ilabel">Email</span><span class="ivalue">{{ user.email }}</span></div>
+      <div class="info-row"><span class="ilabel">{{ t('current_plan') }}</span><span class="ivalue" style="text-transform:capitalize;">{{ user.plan }}</span></div>
+      <div class="info-row"><span class="ilabel">{{ t('quota') }}</span>
+        <span class="ivalue">
+          <div class="quota-bar" style="width:120px;display:inline-block;vertical-align:middle;margin-right:8px;"><div class="quota-fill" style="width:{{ used_percent }}%"></div></div>
+          {{ used_space }} / {{ total_space }}
+        </span>
+      </div>
+      {% if user.subscription_expiry %}
+      <div class="info-row"><span class="ilabel">{{ t('subscription') }}</span><span class="ivalue">{{ t('expires_on') }} {{ user.subscription_expiry.strftime('%d/%m/%Y') }}</span></div>
+      {% endif %}
+      <div class="info-row"><span class="ilabel">{{ t('account_created') }}</span><span class="ivalue">{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else '—' }}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Partage et récupération</h2>
+    <div class="account-info">
+      <div class="info-row"><span class="ilabel">Empreinte de vos clés de partage</span><span class="ivalue fp" id="myFingerprint">…</span></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ash);margin:12px 0 14px;line-height:1.5;">Quand quelqu'un vous partage un fichier pour la première fois, il voit cette empreinte : comparez-la ensemble (de vive voix) pour être sûrs que personne ne s'est glissé entre vous.</p>
+    <a href="/trusted-contacts" class="links-btn" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:1px solid rgba(255,90,90,0.3);border-radius:9px;color:var(--bone);font-size:13px;text-decoration:none;">🛡️ Gérer mes contacts de confiance</a>
+  </div>
+
+  <div class="card">
+    <h2>{{ t('change_username') }}</h2>
+    <form method="POST">
+            {% include 'partials/csrf_token.html' %}
+<input type="hidden" name="action" value="change_username">
+      <div class="field">
+        <label>{{ t('new_username') }}</label>
+        <input type="text" name="new_username" placeholder="{{ user.username }}" value="{{ user.username }}" maxlength="50" required>
+        <div class="hint">{{ t('between_2_50') }}</div>
+      </div>
+      <button type="submit" class="submit-btn">{{ t('update') }}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>{{ t('change_password') }}</h2>
+    <div id="msg" class="flash" style="display:none;"></div>
+    <form id="changePasswordForm" action="javascript:void(0);">
+      <div class="field">
+        <label>{{ t('current_password') }}</label>
+        <input type="password" id="old_password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="field">
+        <label>{{ t('new_password') }}</label>
+        <input type="password" id="new_password" placeholder="••••••••" required autocomplete="new-password">
+        <div class="hint">{{ t('min_8_chars') }}</div>
+      </div>
+      <div class="field">
+        <label>{{ t('confirm_new_password') }}</label>
+        <input type="password" id="confirm_password" placeholder="••••••••" required autocomplete="new-password">
+      </div>
+      <button type="submit" class="submit-btn">{{ t('change_password') }}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>{{ t('language') }}</h2>
+    <form method="POST">
+            {% include 'partials/csrf_token.html' %}
+<input type="hidden" name="action" value="change_language">
+      <div class="field">
+        <label>{{ t('choose_language') }}</label>
+        <select name="language" style="width:100%;background:rgba(10,3,4,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;color:var(--bone);font-size:14px;font-family:'Inter',sans-serif;outline:none;cursor:pointer;transition:border-color 0.2s;" class="lang-select">
+          <option value="fr" {% if user.language == 'fr' %}selected{% endif %}>Français 🇫🇷</option>
+          <option value="en" {% if user.language == 'en' %}selected{% endif %}>English 🇬🇧</option>
+        </select>
+        <div class="hint">{{ t('interface_language') }}</div>
+      </div>
+      <button type="submit" class="submit-btn">{{ t('apply') }}</button>
+    </form>
+  </div>
+
+  <div class="card" style="background:rgba(200,30,44,0.06);border-color:rgba(255,90,90,0.2);">
+    <h2 style="color:var(--ember-glow);">{{ t('share_links') }}</h2>
+    <p style="font-size:13px;color:var(--ash);margin-bottom:14px;">{{ t('manage_share_links') }}</p>
+    <a href="/share/list" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:1px solid rgba(255,90,90,0.3);border-radius:9px;color:var(--bone);font-size:13px;text-decoration:none;transition:background 0.2s;" class="links-btn">
+      {{ t('view_my_links') }}
+    </a>
+  </div>
+</main>
+<script src="/static/js/vault-crypto.js"></script>
+<script src="/static/js/vault-keystore.js"></script>
+<script src="/static/js/vault-auth.js"></script>
+<script src="/static/js/vault-pre.js"></script>
+<script src="/static/js/vault-shared.js"></script>
+<script type="module" src="/static/js/vault-umbral.js"></script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>

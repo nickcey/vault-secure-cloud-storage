@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>Vault</title>
+{% include 'partials/theme_init.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{ --ember-hot:#c81e2c; --ember-glow:#ff3b44; --bone:#f3e6e4; --ash:#9a7f7e;
+         --glass:rgba(35,12,14,0.35); --glass-edge:rgba(255,90,90,0.16); }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--bone);background:#070404;
+       display:flex;align-items:center;justify-content:center;padding:16px;}
+  .card{background:var(--glass);border:1px solid var(--glass-edge);border-radius:18px;padding:34px 28px 28px;
+        width:100%;max-width:420px;text-align:center;}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--ember-hot),#3a0409);
+              display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(200,30,44,0.5);
+              font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;}
+  h2{font-family:'Orbitron',sans-serif;font-size:18px;margin-bottom:18px;color:var(--ember-glow);}
+  .value{font-family:Consolas,'DejaVu Sans Mono','Courier New',monospace;font-weight:700;font-size:28px;letter-spacing:4px;
+         color:var(--ember-glow);background:#0b0606;border:1px solid var(--glass-edge);border-radius:12px;padding:18px 10px;
+         word-break:break-all;user-select:all;-webkit-user-select:all;}
+  .btn{display:block;width:100%;margin-top:18px;padding:14px;border:none;border-radius:10px;cursor:pointer;
+       font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#fff;
+       background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);}
+  .btn.done{background:#1f7a46;}
+  .hint{font-size:12.5px;color:var(--ash);margin-top:14px;line-height:1.5;}
+  a{color:var(--ember-glow);font-size:13px;display:inline-block;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
+  <h2 id="copyTitle">Votre code</h2>
+  <div class="value" id="copyValue">—</div>
+  <button type="button" class="btn" id="copyBtn">Copier</button>
+  <p class="hint" id="copyHint">Collez-le ensuite dans la page Vault ouverte.</p>
+  <a href="/login">Ouvrir Vault</a>
+</div>
+<script src="/static/js/vault-copy.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'fr' }}">
+<head>
+{% if lang == 'en' %}<script src="/i18n/en.js"></script>
+<script src="/static/js/vault-i18n.js"></script>{% endif %}
+
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+<meta name="theme-color" content="#0b0606">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Vault</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --void:#070404; --void-deep:#030101; --ember:#7a0f16; --ember-hot:#c81e2c;
+    --ember-glow:#ff3b44; --bone:#f3e6e4; --ash:#9a7f7e;
+    --glass:rgba(35,12,14,0.35); --glass-edge:rgba(255,90,90,0.16); --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif; color:var(--bone);
+    display:flex; align-items:center; justify-content:center;
+  }
+              linear-gradient(180deg,#030101 0%,#070404 60%);
+  }
+  .card{
+    background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius);
+    padding:38px 36px 32px; backdrop-filter:blur(22px); width:460px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
+  }
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:26px;}
+  .brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg, var(--ember-hot), #3a0409); display:flex; align-items:center; justify-content:center; font-family:'Orbitron',sans-serif; font-weight:900; font-size:15px;}
+  .brand-name{font-family:'Orbitron',sans-serif; font-size:14px; letter-spacing:0.14em; text-transform:uppercase; color:var(--bone);}
+  h2{font-family:'Orbitron',sans-serif; font-size:22px; font-weight:700; margin-bottom:6px;}
+  .sub{font-size:13px; color:var(--ash); margin-bottom:20px;}
+  .flash{font-size:13px; padding:11px 14px; border-radius:10px; margin-bottom:14px; border:1px solid transparent;}
+  .flash.error{background:rgba(200,30,44,0.14);border-color:rgba(255,80,90,0.4);color:#ff9ba0;}
+  .field{margin-bottom:16px; position:relative;}
+  .field label{display:block; font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ash); margin-bottom:7px;}
+  .field input{
+    width:100%; background:rgba(10,3,4,0.55); border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px; padding:13px 40px 13px 14px; color:var(--bone); font-size:14px;
+    font-family:'Inter',sans-serif; outline:none;
+  }
+  .field input:focus{border-color:var(--ember-hot);}
+  .toggle-password{
+    position:absolute; right:10px; top:34px; background:none; border:none;
+    color:var(--ash); cursor:pointer; padding:4px;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  }
+  .toggle-password:hover{color:var(--bone);}
+  .toggle-password svg{width:18px; height:18px; fill:currentColor;}
+  .submit-btn{
+    width:100%; padding:14px 16px; border:none; border-radius:11px;
+    font-family:'Orbitron',sans-serif; font-weight:700; font-size:13.5px;
+    text-transform:uppercase; color:#160305;
+    background:linear-gradient(135deg, var(--ember-glow), var(--ember-hot) 60%, #5a0a10);
+    cursor:pointer;
+  }
+  .submit-btn:hover{transform:translateY(-2px);}
+  .switch-line{text-align:center; margin-top:18px; font-size:13px; color:var(--ash);}
+  .switch-line a{color:var(--ember-glow); text-decoration:none;}
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<link rel="stylesheet" href="/static/mobile.css">
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
+  <h2>Prévisualisation</h2>
+  <p class="sub">Entrez votre mot de passe pour prévisualiser : <strong>{{ file.filename }}</strong> ({{ file_size }})</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <form method="POST">
+          {% include 'partials/csrf_token.html' %}
+<div class="field">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" name="password" placeholder="••••••••" required>
+      <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      </button>
+    </div>
+    <button type="submit" class="submit-btn">Déchiffrer et prévisualiser</button>
+    <div class="switch-line"><a href="/dashboard">← Retour</a></div>
+  </form>
+</div>
+<script>
+function togglePassword(id, btn){
+  var input = document.getElementById(id);
+  var svg = btn.querySelector('svg');
+  if(input.type === 'password'){
+    input.type = 'text';
+    svg.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/><line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2"/>';
+  } else {
+    input.type = 'password';
+    svg.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+  }
+}
+</script>
+<script src="/static/theme.js"></script>
+{% include 'partials/csrf_script.html' %}
+</body>
+</html>
