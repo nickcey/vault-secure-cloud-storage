@@ -52,7 +52,7 @@ def render(title, paragraphs, *, greeting=None, code=None, code_label=None, code
     code        : code ou mot de passe à mettre en valeur (facultatif)
     code_label  : libellé au-dessus du code ; code_note : ligne sous le code
     text_label  : phrase de la version texte (« Votre code est : 123456 »)
-    copy_url    : adresse de la page « Copier » (bouton sous le code)
+    copy_url    : ignoré (une messagerie ne peut pas copier : aucun bouton n'est ajouté)
     notice      : encadré d'avertissement (texte brut)
     button      : (libellé, url) pour un bouton d'action
     preheader   : aperçu affiché dans la liste des messages
@@ -79,15 +79,9 @@ def render(title, paragraphs, *, greeting=None, code=None, code_label=None, code
               f'-webkit-user-select:all;user-select:all;">{e(code)}</div>'
             + (f'<div style="font-family:{FONT};font-size:12px;color:{ASH};margin-top:10px;">{e(code_note)}</div>'
                if code_note else '')
-            + (f'<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:14px auto 0;"><tr>'
-               f'<td bgcolor="{CARD}" style="border:1px solid {EMBER_DARK};border-radius:8px;background-color:{CARD};">'
-               f'<a href="{e(copy_url)}" style="display:inline-block;padding:9px 18px;font-family:{FONT};font-size:13px;'
-               f'font-weight:bold;color:{EMBER};text-decoration:none;">'
-               + e(tr("📋 Copier " + ("le code" if code.isdigit() else "le mot de passe")))
-               + '</a></td></tr></table>' if copy_url else '')
-            + f'<div style="font-family:{FONT};font-size:11px;color:{ASH};margin-top:8px;">'
-            + e(tr(("Ou appuyez" if copy_url else "Appuyez") + " longuement sur "
-                   + ("le code" if code.isdigit() else "le mot de passe") + " pour le sélectionner."))
+            + f'<div style="font-family:{FONT};font-size:11px;color:{ASH};margin-top:10px;">'
+            + e(tr("Appuyez longuement sur " + ("le code" if code.isdigit() else "le mot de passe")
+                   + " pour le sélectionner, puis copiez-le."))
             + '</div>'
             + '</td></tr></table>')
     if button:

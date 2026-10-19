@@ -262,10 +262,7 @@ def _mail_language(to):
 
 def send_vault_mail(to, subject, **content):
     """Courriel aux couleurs de Vault (HTML + texte). Lève une exception si l'envoi échoue."""
-    code = content.get('code')
-    if code and 'copy_url' not in content:
-        # Valeur après « # » : jamais envoyée au serveur quand on ouvre le lien
-        content['copy_url'] = _app_url('/copier') + ('#c=' if str(code).isdigit() else '#p=') + str(code)
+    content.pop('copy_url', None)   # pas de lien de copie : le code est sélectionnable dans le courriel
     lang = _mail_language(to)
     if lang == 'en':
         subject = i18n_translate(subject)

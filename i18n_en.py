@@ -451,6 +451,8 @@ PHRASES = {
     'Collez-le ensuite dans la page Vault ouverte.': 'Then paste it into the open Vault page.',
     'Ouvrir Vault': 'Open Vault',
     'Sélectionnez puis copiez': 'Select, then copy',
+    'Copié': 'Copied',
+    'Copié ✓ Collez-le dans la page Vault ouverte.': 'Copied ✓ Paste it into the open Vault page.',
 
     # ── Administration ───────────────────────────────────────────────────────
     'Portail Administrateur': 'Administrator Portal',
@@ -580,6 +582,8 @@ PHRASES = {
     'Ou appuyez longuement sur le mot de passe pour le sélectionner.': 'Or press and hold the password to select it.',
     'Appuyez longuement sur le code pour le sélectionner.': 'Press and hold the code to select it.',
     'Appuyez longuement sur le mot de passe pour le sélectionner.': 'Press and hold the password to select it.',
+    'Appuyez longuement sur le code pour le sélectionner, puis copiez-le.': 'Press and hold the code to select it, then copy it.',
+    'Appuyez longuement sur le mot de passe pour le sélectionner, puis copiez-le.': 'Press and hold the password to select it, then copy it.',
 }
 
 # Textes avec une partie variable. Ancrés au début et à la fin du texte.

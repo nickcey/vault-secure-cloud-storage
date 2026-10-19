@@ -25,10 +25,16 @@
   .value{font-family:Consolas,'DejaVu Sans Mono','Courier New',monospace;font-weight:700;font-size:28px;letter-spacing:4px;
          color:var(--ember-glow);background:#0b0606;border:1px solid var(--glass-edge);border-radius:12px;padding:18px 10px;
          word-break:break-all;user-select:all;-webkit-user-select:all;}
-  .btn{display:block;width:100%;margin-top:18px;padding:14px;border:none;border-radius:10px;cursor:pointer;
-       font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#fff;
-       background:linear-gradient(135deg,var(--ember-glow),var(--ember-hot) 60%,#5a0a10);}
-  .btn.done{background:#1f7a46;}
+  .value-row{position:relative;}
+  .value-row .value{padding-right:58px;padding-left:58px;}
+  .copy-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:10px;
+       display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ash);
+       background:transparent;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s;}
+  .copy-icon:hover,.copy-icon:focus-visible{color:var(--bone);background:rgba(255,255,255,0.06);border-color:var(--glass-edge);outline:none;}
+  .copy-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .copy-icon .ok{display:none;}
+  .copy-icon.done{color:#3ecf7a;}
+  .copy-icon.done .sq{display:none;} .copy-icon.done .ok{display:block;}
   .hint{font-size:12.5px;color:var(--ash);margin-top:14px;line-height:1.5;}
   a{color:var(--ember-glow);font-size:13px;display:inline-block;margin-top:16px;}
 </style>
@@ -37,8 +43,13 @@
 <div class="card">
   <div class="brand"><div class="brand-mark">V</div><div class="brand-name">Vault</div></div>
   <h2 id="copyTitle">Votre code</h2>
-  <div class="value" id="copyValue">—</div>
-  <button type="button" class="btn" id="copyBtn">Copier</button>
+  <div class="value-row">
+    <div class="value" id="copyValue">—</div>
+    <button type="button" class="copy-icon" id="copyBtn" title="Copier" aria-label="Copier">
+      <svg class="sq" viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"/><path d="M15.5 8.5V6.2A2.2 2.2 0 0 0 13.3 4H6.2A2.2 2.2 0 0 0 4 6.2v7.1a2.2 2.2 0 0 0 2.2 2.2h2.3"/></svg>
+      <svg class="ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    </button>
+  </div>
   <p class="hint" id="copyHint">Collez-le ensuite dans la page Vault ouverte.</p>
   <a href="/login">Ouvrir Vault</a>
 </div>

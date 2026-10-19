@@ -26,8 +26,14 @@
       try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
       t.remove();
     }
-    if (ok) { btn.textContent = 'Copié ✓'; btn.classList.add('done'); }
-    else { btn.textContent = 'Sélectionnez puis copiez'; }
+    const hint = document.getElementById('copyHint');
+    if (ok) {
+      btn.classList.add('done'); btn.title = 'Copié'; btn.setAttribute('aria-label', 'Copié');
+      hint.textContent = 'Copié ✓ Collez-le dans la page Vault ouverte.';
+      setTimeout(() => { btn.classList.remove('done'); btn.title = 'Copier'; btn.setAttribute('aria-label', 'Copier'); }, 2500);
+    } else {
+      hint.textContent = 'Sélectionnez puis copiez';
+    }
   }
   btn.addEventListener('click', copy);
 })();
