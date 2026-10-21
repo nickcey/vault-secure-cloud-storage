@@ -20,6 +20,7 @@ _TMP = tempfile.mkdtemp(prefix='vault_test_pre_')
 os.environ['VAULT_DB_PATH'] = os.path.join(_TMP, 'test.db')
 os.environ['VAULT_UPLOAD_FOLDER'] = os.path.join(_TMP, 'uploads')
 os.environ.setdefault('FLASK_ENV', 'development')
+os.environ['VAULT_DEV_SHOW_CODES'] = '1'   # tests : le serveur de courriel est absent, le code est lu à l'écran
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import umbral_pre as U                                                                  # noqa: E402

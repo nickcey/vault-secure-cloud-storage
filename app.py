@@ -48,6 +48,7 @@ import hashlib
 # LOGGING
 # ══════════════════════════════════════════════════════════════
 import logging
+import threading
 from logging.handlers import RotatingFileHandler
 
 PBKDF2_ITERATIONS = 600000
@@ -132,9 +133,49 @@ def _utcnow():
     return datetime.utcnow()
 
 
+FAILED_LOGIN_WINDOW = 15 * 60      # fenêtre d'observation (secondes)
+FAILED_LOGIN_THRESHOLD = 5         # échecs depuis une même adresse avant alerte
+_failed_logins, _failed_alerted = {}, {}
+_failed_lock = threading.Lock()
+
+
+def _record_failed_login(email, kind='utilisateur'):
+    """Journalise un échec de connexion et alerte les administrateurs en cas de série suspecte.
+    Le journal contient l'adresse visée et l'adresse IP, jamais la valeur saisie."""
+    ip = request.remote_addr or 'inconnue'
+    now = time.time()
+    with _failed_lock:
+        recent = [t for t in _failed_logins.get(ip, []) if now - t < FAILED_LOGIN_WINDOW]
+        recent.append(now)
+        _failed_logins[ip] = recent
+        count = len(recent)
+        alert = count >= FAILED_LOGIN_THRESHOLD and now - _failed_alerted.get(ip, 0) > 3600
+        if alert:
+            _failed_alerted[ip] = now   # une alerte par adresse et par heure au plus
+    app.logger.warning(f'Échec de connexion ({kind}) pour {email} depuis {ip}')
+    if not alert:
+        return
+    app.logger.critical(f'ALERTE : {count} échecs de connexion en 15 minutes depuis {ip} '
+                        f'(dernier compte visé : {email})')
+    target = User.query.filter_by(email=email).first()
+    if target:
+        log_activity(target.id, 'Alerte : tentatives de connexion répétées')
+        db.session.commit()
+    for adm in User.query.filter_by(is_admin=True).all():
+        _notify(adm.email, f'Alerte de sécurité : {count} échecs de connexion - Vault',
+                title='Tentatives de connexion répétées',
+                paragraphs=[f'{count} tentatives de connexion ont échoué en moins de 15 minutes depuis '
+                            f'l\'adresse {ip}.',
+                            f'Dernier compte visé : {email} ({kind}).'],
+                notice='Il peut s\'agir d\'une attaque par force brute. Les requêtes de cette adresse sont '
+                       'déjà limitées ; vérifiez le journal d\'activité et, au besoin, suspendez le compte visé.')
+
+
 def _dev_mode():
-    """En développement seulement, le code OTP est renvoyé si l'e-mail ne part pas."""
-    return os.environ.get('FLASK_ENV') != 'production'
+    """Affichage d'un code à l'écran quand l'e-mail ne part pas : uniquement si VAULT_DEV_SHOW_CODES=1
+    est défini explicitement, et jamais en production. Un secret n'est jamais écrit dans les journaux."""
+    return (os.environ.get('VAULT_DEV_SHOW_CODES') == '1'
+            and os.environ.get('FLASK_ENV') != 'production')
 
 
 # ══════════════════════════════════════════════════════════════
@@ -451,7 +492,7 @@ def signup():
                 preheader=f'Votre code de vérification : {otp}')
             flash('Un code de vérification a été envoyé à votre adresse email.', 'info')
         except Exception as e:
-            app.logger.error(f'Échec envoi OTP inscription : {e}')
+            app.logger.error(f'Échec envoi OTP inscription : {type(e).__name__}')
             if not _dev_mode():
                 flash("Impossible d'envoyer l'e-mail de vérification.", 'error')
                 return redirect(url_for('signup'))
@@ -531,9 +572,11 @@ def verify_signup_otp():
                 button=('Se connecter', _app_url('/login')),
                 preheader='Votre mot de passe temporaire pour vous connecter à Vault')
         except Exception as e:
-            app.logger.error(f'Échec envoi mot de passe temporaire : {e}')
+            app.logger.error(f'Échec envoi mot de passe temporaire : {type(e).__name__}')
             if _dev_mode():
                 flash(f'Erreur envoi email. Mot de passe temporaire : {temp_password}', 'info')
+            else:
+                flash("Le courriel contenant votre mot de passe temporaire n'a pas pu être envoyé. Réessayez plus tard.", 'error')
 
         session['user_id'] = user.id
         session['last_activity'] = int(time.time())
@@ -603,7 +646,7 @@ def login():
 
     user = User.query.filter_by(email=email).first()
     if user is None or not verify_auth_value(auth_value_hex, user.auth_hash):
-        app.logger.warning(f'Failed login attempt for {email} from {request.remote_addr}')
+        _record_failed_login(email)
         return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
 
     if user.is_suspended:
@@ -630,11 +673,10 @@ def _send_login_otp(user):
         send_otp_email(user.email, otp)
         flash('Un code de vérification a été envoyé à votre adresse email', 'info')
     except Exception as e:
-        app.logger.error(f'Failed to send OTP email: {e}')
+        app.logger.error(f'Échec de l\'envoi du code de connexion à {user.email} : {type(e).__name__}')
         if not _dev_mode():
             return False
-        print(f"\n{'='*60}\nCODE OTP POUR {user.email}\n   Code : {otp}\n{'='*60}\n")
-        flash(f'Erreur envoi email. Code affiché dans le terminal : {otp}', 'info')
+        flash(f'Erreur envoi email. Code : {otp}', 'info')   # mode test explicite uniquement
     return True
 
 
@@ -1886,7 +1928,7 @@ def api_shamir_start():
                    "aucune demande ne peut être envoyée à vos contacts.",
             preheader=f'Votre code de récupération : {otp}')
     except Exception as e:
-        app.logger.error(f'Échec envoi code récupération : {e}')
+        app.logger.error(f'Échec envoi code récupération : {type(e).__name__}')
         if _dev_mode():
             generic['dev_otp'] = otp
     return jsonify(generic)
@@ -2395,6 +2437,7 @@ def admin_login():
         auth_value_hex = data.get('auth_value')
         user = User.query.filter_by(email=email, is_admin=True).first()
         if user is None or not verify_auth_value(auth_value_hex or '', user.auth_hash):
+            _record_failed_login(email, 'administrateur')
             return jsonify({'error': 'Identifiants administrateur incorrects.'}), 401
 
         session['user_id'] = user.id
